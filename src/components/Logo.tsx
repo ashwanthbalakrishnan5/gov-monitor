@@ -4,6 +4,7 @@ interface LogoProps {
   className?: string
   showWordmark?: boolean
   size?: 'sm' | 'md' | 'lg'
+  inverted?: boolean
 }
 
 const SIZES = {
@@ -12,7 +13,7 @@ const SIZES = {
   lg: { icon: 36, text: 'text-2xl' },
 }
 
-export function Logo({ className, showWordmark = true, size = 'md' }: LogoProps) {
+export function Logo({ className, showWordmark = true, size = 'md', inverted = false }: LogoProps) {
   const s = SIZES[size]
 
   return (
@@ -35,7 +36,8 @@ export function Logo({ className, showWordmark = true, size = 'md' }: LogoProps)
       {showWordmark && (
         <span
           className={cn(
-            'font-display tracking-tight text-[var(--foreground)]',
+            'font-display tracking-tight',
+            inverted ? 'text-white/90' : 'text-[var(--foreground)]',
             s.text
           )}
         >

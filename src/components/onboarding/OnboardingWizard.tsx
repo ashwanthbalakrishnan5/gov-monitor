@@ -366,7 +366,7 @@ function CircularProgressRing({
         className="pointer-events-none absolute inset-3 rounded-full blur-xl"
         animate={{
           backgroundColor: step.accentColor,
-          opacity: 0.1,
+          opacity: 0.12,
         }}
         transition={{ duration: 0.6 }}
       />
@@ -458,22 +458,24 @@ export function OnboardingWizard() {
   const progressFraction = (currentIndex + 1) / activeSteps.length
 
   return (
-    <div className="relative flex min-h-dvh w-full flex-col md:flex-row overflow-hidden">
+    <div className="atmo-bg relative flex min-h-dvh w-full flex-col md:flex-row overflow-hidden">
       {/* ============================================= */}
       {/* DYNAMIC BACKGROUND -- shifts color per step   */}
       {/* ============================================= */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div
-          className="absolute w-[70%] h-[60%] top-[15%] left-[5%] rounded-full blur-3xl transition-[background-color] duration-700 ease-in-out"
-          style={{ backgroundColor: `${currentStep.accentColor}0A` }}
+        <motion.div
+          className="absolute w-[70%] h-[60%] top-[15%] left-[5%] rounded-full blur-3xl"
+          animate={{ backgroundColor: `${currentStep.accentColor}0A` }}
+          transition={{ duration: 0.7, ease: 'easeInOut' }}
         />
-        <div
-          className="absolute w-[50%] h-[50%] top-[5%] right-[5%] rounded-full blur-3xl transition-[background-color] duration-700 ease-in-out"
-          style={{ backgroundColor: `${currentStep.accentColor}07` }}
+        <motion.div
+          className="absolute w-[50%] h-[50%] top-[5%] right-[5%] rounded-full blur-3xl"
+          animate={{ backgroundColor: `${currentStep.accentColor}07` }}
+          transition={{ duration: 0.7, ease: 'easeInOut' }}
         />
         <div
           className="absolute w-[40%] h-[40%] bottom-[10%] left-[30%] rounded-full blur-3xl"
-          style={{ backgroundColor: 'rgba(26,43,74,0.03)' }}
+          style={{ backgroundColor: 'rgba(139,92,246,0.04)' }}
         />
       </div>
 
@@ -492,6 +494,17 @@ export function OnboardingWizard() {
         </filter>
         <rect width="100%" height="100%" filter="url(#onboarding-grain)" />
       </svg>
+
+      {/* Dot grid pattern */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[1]"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, var(--border) 0.5px, transparent 0.5px)',
+          backgroundSize: '28px 28px',
+          opacity: 0.12,
+        }}
+      />
 
       {/* ============================================= */}
       {/* MOBILE: Fixed progress bar                     */}
@@ -525,13 +538,8 @@ export function OnboardingWizard() {
         />
 
         <div
-          className="relative w-full max-w-md rounded-2xl p-8 lg:p-10"
-          style={{
-            background: 'rgba(255,255,255,0.75)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(0,0,0,0.06)',
-          }}
+          className="glass-panel relative w-full max-w-md rounded-2xl p-8 lg:p-10"
+          style={{ boxShadow: 'var(--elevation-2)' }}
         >
           {/* Progress dots (persistent, not inside AnimatePresence) */}
           <div className="mb-8">
@@ -572,6 +580,7 @@ export function OnboardingWizard() {
                     width: 28,
                     height: 28,
                     backgroundColor: currentStep.accentColor,
+                    boxShadow: `0 2px 8px ${currentStep.accentColor}40`,
                   }}
                 >
                   {stepNumber}
@@ -591,8 +600,8 @@ export function OnboardingWizard() {
 
               {/* Trust note */}
               <p className="mt-5 text-sm text-[var(--muted-foreground)] leading-relaxed">
-                Your data stays on your device. Nothing is sent to any server
-                until you view your dashboard.
+                Your profile is stored only in your browser. It's sent securely
+                for analysis but never saved on our servers.
               </p>
             </motion.div>
           </AnimatePresence>
@@ -605,16 +614,13 @@ export function OnboardingWizard() {
       <div className="flex-1 flex flex-col justify-center items-center px-5 pt-6 pb-8 md:pt-0 md:pb-0 md:px-8 lg:px-12 relative z-10">
         <div
           {...spotlightHandlers}
-          className="relative w-full max-w-lg rounded-2xl p-6 md:p-8 lg:p-10 flex flex-col"
+          className="glass-panel relative w-full max-w-lg rounded-2xl p-6 md:p-8 lg:p-10 flex flex-col"
           style={{
-            background: 'rgba(255,255,255,0.8)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(0,0,0,0.06)',
             boxShadow: isHovered
-              ? '0 16px 48px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.03)'
-              : '0 1px 3px rgba(0,0,0,0.03)',
-            transition: 'box-shadow 0.3s ease',
+              ? 'var(--elevation-3)'
+              : 'var(--elevation-1)',
+            borderColor: isHovered ? 'var(--glass-border-hover)' : undefined,
+            transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
           }}
         >
           {/* Mouse spotlight overlay */}
@@ -732,7 +738,7 @@ export function OnboardingWizard() {
                 onClick={goNext}
                 disabled={!canContinue}
                 className={cn(
-                  'group relative overflow-hidden rounded-lg px-8 min-h-[48px] w-full md:w-auto md:min-w-[140px] text-sm font-semibold text-white transition-all duration-200 cursor-pointer',
+                  'group relative overflow-hidden rounded-xl px-8 min-h-[48px] w-full md:w-auto md:min-w-[140px] text-sm font-semibold text-white transition-all duration-200 cursor-pointer',
                   'disabled:opacity-40 disabled:cursor-not-allowed',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2'
                 )}
@@ -740,6 +746,7 @@ export function OnboardingWizard() {
                   background: canContinue
                     ? `linear-gradient(135deg, ${currentStep.accentColor}, ${currentStep.accentColor}dd)`
                     : currentStep.accentColor,
+                  boxShadow: canContinue ? `0 4px 16px ${currentStep.accentColor}30` : undefined,
                 }}
               >
                 {/* Shimmer sweep overlay */}
@@ -764,8 +771,8 @@ export function OnboardingWizard() {
 
         {/* Mobile trust note */}
         <p className="block md:hidden mt-4 text-center text-xs text-[var(--muted-foreground)] px-4 pb-[env(safe-area-inset-bottom)]">
-          Your data stays on your device. Nothing is sent to any server until
-          you view your dashboard.
+          Your profile is stored only in your browser. Sent securely for
+          analysis, never saved on our servers.
         </p>
       </div>
     </div>

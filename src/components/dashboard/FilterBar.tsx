@@ -1,4 +1,3 @@
-import { motion, useReducedMotion } from 'framer-motion'
 import {
   Globe,
   Home,
@@ -6,6 +5,9 @@ import {
   Receipt,
   GraduationCap,
   Heart,
+  ShieldCheck,
+  Bookmark,
+  Car,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { LegalCategory } from '@/types/legal-change'
@@ -14,8 +16,10 @@ import type { Severity } from '@/types/alert'
 interface FilterBarProps {
   severityFilter: 'all' | Severity
   categoryFilter: string
+  savedOnly: boolean
   onSeverityChange: (severity: 'all' | Severity) => void
   onCategoryChange: (category: string) => void
+  onSavedOnlyChange: (saved: boolean) => void
 }
 
 const SEVERITY_OPTIONS: { value: 'all' | Severity; label: string; color?: string }[] = [
@@ -31,32 +35,29 @@ const CATEGORY_OPTIONS: {
   icon: React.ComponentType<{ className?: string }>
   color: string
 }[] = [
-  { value: 'all', label: 'All', icon: Globe, color: '#1A2B4A' },
+  { value: 'all', label: 'All', icon: Globe, color: '#94A3B8' },
   { value: 'immigration', label: 'Immigration', icon: Globe, color: '#7C3AED' },
   { value: 'housing', label: 'Housing', icon: Home, color: '#059669' },
   { value: 'employment', label: 'Employment', icon: Briefcase, color: '#2563EB' },
   { value: 'taxation', label: 'Tax', icon: Receipt, color: '#D97706' },
   { value: 'education', label: 'Education', icon: GraduationCap, color: '#DB2777' },
   { value: 'healthcare', label: 'Healthcare', icon: Heart, color: '#DC2626' },
+  { value: 'business', label: 'Business', icon: Briefcase, color: '#2563EB' },
+  { value: 'consumer', label: 'Consumer', icon: ShieldCheck, color: '#94A3B8' },
+  { value: 'transportation', label: 'Transport', icon: Car, color: '#EA580C' },
 ]
 
 export function FilterBar({
   severityFilter,
   categoryFilter,
+  savedOnly,
   onSeverityChange,
   onCategoryChange,
+  onSavedOnlyChange,
 }: FilterBarProps) {
-  const prefersReducedMotion = useReducedMotion()
-
   return (
-    <div
-      className={cn(
-        'sticky top-14 z-40 w-full',
-        'backdrop-blur-xl bg-white/75 border-b border-black/[0.06]'
-      )}
-    >
-      <div className="mx-auto max-w-3xl px-4">
-        {/* Scrollable container with fade edges */}
+    <div className="w-full">
+      <div>
         <div
           className="relative overflow-x-auto py-3 scrollbar-none"
           style={{
@@ -65,17 +66,36 @@ export function FilterBar({
           }}
         >
           <div className="flex items-center gap-2 min-w-max px-1">
+            {/* Saved toggle */}
+            <button
+              onClick={() => onSavedOnlyChange(!savedOnly)}
+              className={cn(
+                'relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer min-h-[44px]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-1',
+                savedOnly
+                  ? 'text-white shadow-[0_2px_8px_rgba(196,112,62,0.25)]'
+                  : 'border border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+              )}
+              style={savedOnly ? { backgroundColor: 'var(--accent)' } : undefined}
+            >
+              <Bookmark className="h-3.5 w-3.5" />
+              <span className="font-mono text-[11px] uppercase tracking-wider">
+                Saved
+              </span>
+            </button>
+
+            {/* Divider */}
+            <div className="mx-1 h-5 w-px bg-[var(--border-strong)]" />
+
             {/* Severity pills */}
             {SEVERITY_OPTIONS.map((opt) => {
               const isActive = severityFilter === opt.value
               return (
-                <motion.button
+                <button
                   key={`sev-${opt.value}`}
-                  layout={!prefersReducedMotion}
                   onClick={() => onSeverityChange(opt.value)}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
                   className={cn(
-                    'relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer min-h-[32px]',
+                    'relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer min-h-[44px]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-1',
                     isActive
                       ? 'text-white'
@@ -85,7 +105,8 @@ export function FilterBar({
                     isActive
                       ? {
                           backgroundColor:
-                            opt.value === 'all' ? 'var(--primary)' : opt.color,
+                            opt.value === 'all' ? 'var(--accent)' : opt.color,
+                          boxShadow: opt.color ? `0 2px 8px ${opt.color}30` : undefined,
                         }
                       : undefined
                   }
@@ -99,7 +120,7 @@ export function FilterBar({
                   <span className="font-mono text-[11px] uppercase tracking-wider">
                     {opt.label}
                   </span>
-                </motion.button>
+                </button>
               )
             })}
 
@@ -111,13 +132,11 @@ export function FilterBar({
               const isActive = categoryFilter === opt.value
               const Icon = opt.icon
               return (
-                <motion.button
+                <button
                   key={`cat-${opt.value}`}
-                  layout={!prefersReducedMotion}
                   onClick={() => onCategoryChange(opt.value as LegalCategory | 'all')}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
                   className={cn(
-                    'relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer min-h-[32px]',
+                    'relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer min-h-[44px]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-1',
                     isActive
                       ? 'text-white'
@@ -125,7 +144,10 @@ export function FilterBar({
                   )}
                   style={
                     isActive
-                      ? { backgroundColor: opt.color }
+                      ? {
+                          backgroundColor: opt.color,
+                          boxShadow: `0 2px 8px ${opt.color}30`,
+                        }
                       : undefined
                   }
                 >
@@ -140,18 +162,12 @@ export function FilterBar({
                   <span className="font-mono text-[11px] uppercase tracking-wider">
                     {opt.label}
                   </span>
-                </motion.button>
+                </button>
               )
             })}
           </div>
         </div>
       </div>
-
-      {/* Hide scrollbar */}
-      <style>{`
-        .scrollbar-none::-webkit-scrollbar { display: none; }
-        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   )
 }

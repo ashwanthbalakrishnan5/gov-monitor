@@ -1,71 +1,113 @@
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 export function SkeletonCard() {
+  const prefersReducedMotion = useReducedMotion()
+
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-xl',
-        'bg-white/80 backdrop-blur-sm',
-        'border border-black/[0.05]',
+        'relative overflow-hidden rounded-2xl',
+        'glass-panel',
         'p-5'
       )}
       style={{
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+        boxShadow: 'var(--elevation-1)',
       }}
       aria-hidden="true"
     >
       {/* Severity bar placeholder */}
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--border)]" />
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl bg-[var(--border)]" />
 
-      {/* Shimmer overlay */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="skeleton-shimmer absolute inset-0" />
-      </div>
+      {/* Data-stream shimmer overlay */}
+      <div className="shimmer-stream absolute inset-0 pointer-events-none rounded-2xl" />
+
+      {/* Pulsing wave overlay */}
+      {!prefersReducedMotion && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+          <motion.div
+            className="absolute inset-y-0 w-1/3"
+            style={{
+              background: 'linear-gradient(90deg, transparent, var(--glass-spotlight), transparent)',
+            }}
+            animate={{
+              x: ['-100%', '400%'],
+            }}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              repeatDelay: 0.5,
+            }}
+          />
+        </div>
+      )}
 
       {/* Header row: badge placeholders */}
       <div className="flex items-center gap-2">
-        <div className="h-5 w-24 rounded-full bg-[var(--muted)] animate-pulse" />
-        <div className="h-5 w-14 rounded-full bg-[var(--muted)] animate-pulse" />
-        <div className="ml-auto h-4 w-20 rounded bg-[var(--muted)] animate-pulse" />
+        <motion.div
+          className="h-5 w-24 rounded-full bg-[var(--muted)]"
+          animate={prefersReducedMotion ? {} : { opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="h-5 w-14 rounded-full bg-[var(--muted)]"
+          animate={prefersReducedMotion ? {} : { opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+        />
+        <motion.div
+          className="ml-auto h-4 w-20 rounded bg-[var(--muted)]"
+          animate={prefersReducedMotion ? {} : { opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+        />
       </div>
 
       {/* Title placeholder */}
-      <div className="mt-4 h-5 w-[85%] rounded bg-[var(--muted)] animate-pulse" />
+      <motion.div
+        className="mt-4 h-5 w-[85%] rounded bg-[var(--muted)]"
+        animate={prefersReducedMotion ? {} : { opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
+      />
 
       {/* Summary lines */}
       <div className="mt-3 space-y-2">
-        <div className="h-4 w-full rounded bg-[var(--muted)] animate-pulse" />
-        <div className="h-4 w-[70%] rounded bg-[var(--muted)] animate-pulse" />
-        <div className="h-4 w-[40%] rounded bg-[var(--muted)] animate-pulse" />
+        <motion.div
+          className="h-4 w-full rounded bg-[var(--muted)]"
+          animate={prefersReducedMotion ? {} : { opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+        />
+        <motion.div
+          className="h-4 w-[70%] rounded bg-[var(--muted)]"
+          animate={prefersReducedMotion ? {} : { opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.35 }}
+        />
+        <motion.div
+          className="h-4 w-[40%] rounded bg-[var(--muted)]"
+          animate={prefersReducedMotion ? {} : { opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+        />
       </div>
 
       {/* Footer placeholder */}
       <div className="mt-5 pt-3 border-t border-[var(--border)] flex items-center justify-between">
-        <div className="h-3 w-40 rounded bg-[var(--muted)] animate-pulse" />
+        <motion.div
+          className="h-3 w-40 rounded bg-[var(--muted)]"
+          animate={prefersReducedMotion ? {} : { opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+        />
         <div className="flex gap-2">
-          <div className="h-7 w-16 rounded-lg bg-[var(--muted)] animate-pulse" />
-          <div className="h-7 w-14 rounded-lg bg-[var(--muted)] animate-pulse" />
+          <motion.div
+            className="h-7 w-16 rounded-lg bg-[var(--muted)]"
+            animate={prefersReducedMotion ? {} : { opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
+          />
+          <motion.div
+            className="h-7 w-14 rounded-lg bg-[var(--muted)]"
+            animate={prefersReducedMotion ? {} : { opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+          />
         </div>
       </div>
-
-      <style>{`
-        .skeleton-shimmer {
-          background: linear-gradient(
-            115deg,
-            transparent 25%,
-            rgba(255, 255, 255, 0.4) 37%,
-            rgba(255, 255, 255, 0.6) 50%,
-            rgba(255, 255, 255, 0.4) 63%,
-            transparent 75%
-          );
-          background-size: 400% 100%;
-          animation: shimmerSweep 2s ease-in-out infinite;
-        }
-        @keyframes shimmerSweep {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
     </div>
   )
 }
@@ -73,9 +115,25 @@ export function SkeletonCard() {
 export function SkeletonCards({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <SkeletonCard key={i} />
-      ))}
+      <AnimatePresence mode="popLayout">
+        {Array.from({ length: count }).map((_, i) => (
+          <motion.div
+            key={`skeleton-${i}`}
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}
+            transition={{
+              delay: i * 0.08,
+              type: 'spring',
+              stiffness: 200,
+              damping: 22,
+            }}
+            layout
+          >
+            <SkeletonCard />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }

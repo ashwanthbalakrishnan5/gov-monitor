@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
-  ArrowLeft,
   MapPin,
   Globe,
   Briefcase,
@@ -15,9 +14,6 @@ import {
   Trash2,
   AlertTriangle,
 } from 'lucide-react'
-
-import { NavBar } from '@/components/dashboard/NavBar'
-import { DisclaimerFooter } from '@/components/dashboard/DisclaimerFooter'
 import { ProfileCompleteness } from '@/components/dashboard/ProfileCompleteness'
 import { SelectionChip } from '@/components/onboarding/SelectionChip'
 import { SelectionCard } from '@/components/onboarding/SelectionCard'
@@ -323,7 +319,7 @@ const expandVariants = {
 
 function ValueBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-black/[0.08] bg-white/60 px-3 py-1 text-sm font-mono text-[var(--foreground)]">
+    <span className="inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.06] px-3 py-1 text-sm font-mono text-[var(--foreground)]">
       {children}
     </span>
   )
@@ -525,35 +521,7 @@ export function ProfilePage() {
   const visibleSections = SECTIONS.filter((s) => s.isVisible(profile))
 
   return (
-    <div
-      className="min-h-dvh"
-      style={{
-        backgroundColor: 'var(--background)',
-        backgroundImage:
-          'radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px)',
-        backgroundSize: '24px 24px',
-      }}
-    >
-      {/* Navigation */}
-      <NavBar />
-
-      {/* Main content */}
-      <main className="mx-auto max-w-2xl px-4 pt-6 pb-8">
-        {/* Back link */}
-        <motion.div
-          initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.25 }}
-        >
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors min-h-[44px] cursor-pointer"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </button>
-        </motion.div>
-
+    <div className="px-4 pt-6 pb-8 sm:px-8 lg:px-12 max-w-2xl">
         {/* Profile completeness ring + heading */}
         <motion.div
           className="mt-8 flex flex-col items-center text-center"
@@ -670,10 +638,6 @@ export function ProfilePage() {
             </AnimatePresence>
           </div>
         </motion.div>
-      </main>
-
-      {/* Disclaimer */}
-      <DisclaimerFooter />
     </div>
   )
 }
@@ -718,7 +682,7 @@ function ProfileSection({
       initial={prefersReducedMotion ? false : 'hidden'}
       animate="visible"
       className={cn(
-        'relative rounded-xl border border-black/[0.05] bg-white/80 backdrop-blur-sm overflow-hidden transition-shadow duration-200',
+        'relative rounded-xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm overflow-hidden transition-shadow duration-200',
         isEditing && 'ring-1 ring-[var(--accent)]/30'
       )}
     >
@@ -726,7 +690,7 @@ function ProfileSection({
       <AnimatePresence>
         {showSaveFlash && (
           <motion.div
-            className="absolute inset-0 z-20 flex items-center justify-center bg-emerald-50/80 backdrop-blur-sm rounded-xl"
+            className="absolute inset-0 z-20 flex items-center justify-center bg-emerald-500/10 backdrop-blur-sm rounded-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -737,8 +701,8 @@ function ProfileSection({
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
             >
-              <div className="flex items-center gap-2 text-emerald-700 font-medium text-sm">
-                <Check className="h-5 w-5" />
+              <div className="flex items-center gap-2 text-emerald-400 font-medium text-sm">
+                <Check className="h-5 w-5 text-emerald-400" />
                 Saved
               </div>
             </motion.div>

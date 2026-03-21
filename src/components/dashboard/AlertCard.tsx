@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+} from 'framer-motion'
 import {
   ChevronDown,
   ExternalLink,
@@ -15,17 +19,25 @@ import {
   GraduationCap,
   Heart,
   ShieldCheck,
+  MessageCircle,
+  FileEdit,
+  CalendarDays,
+  Users,
+  Megaphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { PersonalizedAlert } from '@/types/alert'
 
 interface AlertCardProps {
   alert: PersonalizedAlert
+  expanded: boolean
+  onToggleExpand: (id: string) => void
   onDismiss: (id: string) => void
   onSave: (id: string) => void
+  onChatAbout?: (alert: PersonalizedAlert, action?: string) => void
 }
 
-// Category config - using raw hex values for inline style calculations
+// Category config
 const CATEGORY_CONFIG: Record<
   string,
   { label: string; color: string; bgColor: string; icon: React.ComponentType<{ className?: string }> }
@@ -36,18 +48,42 @@ const CATEGORY_CONFIG: Record<
   taxation: { label: 'TAX', color: '#D97706', bgColor: '#D9770615', icon: Receipt },
   education: { label: 'EDUCATION', color: '#DB2777', bgColor: '#DB277715', icon: GraduationCap },
   healthcare: { label: 'HEALTHCARE', color: '#DC2626', bgColor: '#DC262615', icon: Heart },
-  consumer: { label: 'CONSUMER', color: '#1A2B4A', bgColor: '#1A2B4A15', icon: ShieldCheck },
+  consumer: { label: 'CONSUMER', color: '#94A3B8', bgColor: '#94A3B815', icon: ShieldCheck },
   business: { label: 'BUSINESS', color: '#2563EB', bgColor: '#2563EB15', icon: Briefcase },
   transportation: { label: 'TRANSPORT', color: '#EA580C', bgColor: '#EA580C15', icon: Globe },
 }
 
 const SEVERITY_CONFIG: Record<
   string,
-  { label: string; color: string; bgColor: string; lightBg: string; icon: React.ComponentType<{ className?: string }> }
+  {
+    label: string
+    color: string
+    bgColor: string
+    glowClass: string
+    icon: React.ComponentType<{ className?: string }>
+  }
 > = {
-  high: { label: 'HIGH', color: '#DC2626', bgColor: '#DC262612', lightBg: '#FEF2F2', icon: AlertTriangle },
-  medium: { label: 'MEDIUM', color: '#D97706', bgColor: '#D9770612', lightBg: '#FFFBEB', icon: AlertCircle },
-  low: { label: 'LOW', color: '#2563EB', bgColor: '#2563EB12', lightBg: '#EFF6FF', icon: Info },
+  high: {
+    label: 'HIGH',
+    color: '#DC2626',
+    bgColor: '#DC262618',
+    glowClass: 'severity-glow-high',
+    icon: AlertTriangle,
+  },
+  medium: {
+    label: 'MEDIUM',
+    color: '#D97706',
+    bgColor: '#D9770618',
+    glowClass: 'severity-glow-medium',
+    icon: AlertCircle,
+  },
+  low: {
+    label: 'LOW',
+    color: '#2563EB',
+    bgColor: '#2563EB18',
+    glowClass: 'severity-glow-low',
+    icon: Info,
+  },
 }
 
 function formatDate(dateStr: string): string {
@@ -59,8 +95,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
-  const [expanded, setExpanded] = useState(false)
+export function AlertCard({ alert, expanded, onToggleExpand, onDismiss, onSave, onChatAbout }: AlertCardProps) {
   const [summaryTruncated, setSummaryTruncated] = useState(true)
   const prefersReducedMotion = useReducedMotion()
 
@@ -71,9 +106,9 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
 
   const summaryIsLong = alert.summary.length > 180
 
-  const toggleExpand = useCallback(() => {
-    setExpanded((prev) => !prev)
-  }, [])
+  const handleToggle = useCallback(() => {
+    onToggleExpand(alert.legalChangeId)
+  }, [onToggleExpand, alert.legalChangeId])
 
   const handleDismiss = useCallback(
     (e: React.MouseEvent) => {
@@ -91,65 +126,37 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
     [onSave, alert.legalChangeId]
   )
 
-  const springTransition = prefersReducedMotion
-    ? { duration: 0 }
-    : { type: 'spring' as const, stiffness: 350, damping: 28 }
-
   return (
     <motion.article
       layout={!prefersReducedMotion}
       className={cn(
-        'group relative overflow-hidden rounded-xl',
-        'bg-white/80 backdrop-blur-sm',
-        'border border-black/[0.05]',
-        'transition-shadow duration-200',
-        'cursor-pointer'
+        'group relative overflow-hidden rounded-2xl',
+        'glass-panel',
+        'transition-shadow duration-300',
+        'cursor-pointer',
+        'hover:' + sev.glowClass
       )}
-      style={{
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+      style={{ boxShadow: 'var(--elevation-1)' }}
+      whileHover={prefersReducedMotion ? undefined : { boxShadow: 'var(--elevation-3)' }}
+      onClick={handleToggle}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleToggle()
+        }
       }}
-      whileHover={
-        prefersReducedMotion
-          ? undefined
-          : {
-              y: -2,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
-            }
-      }
-      transition={springTransition}
-      onClick={toggleExpand}
+      tabIndex={0}
       role="article"
       aria-label={`${alert.severity} severity alert: ${alert.title}`}
     >
       {/* Severity bar - left edge */}
-      <motion.div
-        className="absolute left-0 top-0 bottom-0 w-[3px]"
-        initial={prefersReducedMotion ? undefined : { scaleY: 0 }}
-        animate={{ scaleY: 1 }}
-        transition={
-          prefersReducedMotion
-            ? { duration: 0 }
-            : { type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }
-        }
-        style={{
-          backgroundColor: sev.color,
-          transformOrigin: 'top',
-        }}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
+        style={{ backgroundColor: sev.color }}
       />
 
-      {/* High severity pulse glow on hover */}
-      {alert.severity === 'high' && (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-          style={{
-            backgroundColor: sev.color,
-            boxShadow: `0 0 8px 2px ${sev.color}40`,
-          }}
-        />
-      )}
-
       {/* Card content */}
-      <div className="pl-5 pr-5 pt-5 pb-4">
+      <div className="pl-5 pr-5 pt-5 pb-4 sm:pl-6 sm:pr-6">
         {/* Header row: badges + date */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Category badge */}
@@ -182,7 +189,7 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
 
           {/* Saved indicator */}
           {alert.savedForLater && (
-            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-[var(--accent)]/10 text-[var(--accent)]">
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-indigo-500/15 text-indigo-400">
               <Bookmark className="h-3 w-3" />
               <span className="font-mono text-[10px] font-medium uppercase tracking-widest">
                 SAVED
@@ -213,7 +220,7 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
                 e.stopPropagation()
                 setSummaryTruncated(false)
               }}
-              className="ml-1 text-[var(--accent)] hover:underline cursor-pointer text-sm font-medium"
+              className="ml-1 text-indigo-400 hover:underline cursor-pointer text-sm font-medium"
             >
               read more
             </button>
@@ -238,8 +245,11 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
                 {/* How This Affects You */}
                 {alert.personalImpact && (
                   <div
-                    className="rounded-lg p-4"
-                    style={{ backgroundColor: sev.lightBg }}
+                    className="rounded-xl p-4 border"
+                    style={{
+                      backgroundColor: `${sev.color}10`,
+                      borderColor: `${sev.color}20`,
+                    }}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className="flex-shrink-0" style={{ color: sev.color }}>
@@ -260,7 +270,7 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
 
                 {/* Action Items */}
                 {alert.actionItems && alert.actionItems.length > 0 && (
-                  <div className="rounded-lg border border-[var(--border)] p-4">
+                  <div className="rounded-xl border border-[var(--border)] p-4">
                     <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-[var(--foreground)]">
                       Action items
                     </span>
@@ -291,6 +301,79 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
                     </ul>
                   </div>
                 )}
+
+                {/* Action Center */}
+                <div className="rounded-xl border border-[var(--border)] p-4">
+                  <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-[var(--foreground)]">
+                    Action Center
+                  </span>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onChatAbout?.(alert)
+                      }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium text-[var(--foreground)] border border-[var(--border)] hover:border-indigo-500/50 hover:bg-indigo-500/[0.06] transition-all cursor-pointer min-h-[44px]"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 text-indigo-400" />
+                      Ask AI about this
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onChatAbout?.(alert, 'draft-letter')
+                      }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium text-[var(--foreground)] border border-[var(--border)] hover:border-violet-500/50 hover:bg-violet-500/[0.06] transition-all cursor-pointer min-h-[44px]"
+                    >
+                      <FileEdit className="h-3.5 w-3.5 text-violet-400" />
+                      Draft a letter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onChatAbout?.(alert, 'find-hearings')
+                      }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium text-[var(--foreground)] border border-[var(--border)] hover:border-rose-500/50 hover:bg-rose-500/[0.06] transition-all cursor-pointer min-h-[44px]"
+                    >
+                      <CalendarDays className="h-3.5 w-3.5 text-rose-400" />
+                      Find hearings
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onChatAbout?.(alert, 'public-comment')
+                      }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium text-[var(--foreground)] border border-[var(--border)] hover:border-amber-500/50 hover:bg-amber-500/[0.06] transition-all cursor-pointer min-h-[44px]"
+                    >
+                      <Megaphone className="h-3.5 w-3.5 text-amber-400" />
+                      Public comment
+                    </button>
+                  </div>
+
+                  {/* Community Pulse mini-view */}
+                  <div className="mt-3 rounded-lg bg-white/[0.04] px-3 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5 text-indigo-400" />
+                      <span className="text-[11px] text-[var(--muted-foreground)]">
+                        Community pulse
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-1">
+                        {['bg-rose-400', 'bg-amber-400', 'bg-indigo-400'].map((bg, i) => (
+                          <div key={i} className={cn('w-4 h-4 rounded-full border-2 border-[var(--background)]', bg)} />
+                        ))}
+                      </div>
+                      <span className="text-[11px] font-medium text-[var(--foreground)]">
+                        {Math.floor(60 + Math.random() * 30)}% concerned
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -299,8 +382,11 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
         {/* Expand toggle indicator */}
         <button
           type="button"
-          onClick={toggleExpand}
-          className="mt-3 flex items-center gap-1 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer min-h-[28px]"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleToggle()
+          }}
+          className="mt-3 flex items-center gap-1 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors cursor-pointer min-h-[44px]"
           aria-expanded={expanded}
           aria-label={expanded ? 'Collapse details' : 'Expand details'}
         >
@@ -310,7 +396,7 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
           >
             <ChevronDown className="h-3.5 w-3.5" />
           </motion.span>
-          <span className="font-mono text-[10px] uppercase tracking-widest">
+          <span className="font-mono text-[10px] uppercase tracking-widest font-medium">
             {expanded ? 'Less' : 'Details'}
           </span>
         </button>
@@ -327,7 +413,7 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
                 </span>
                 {alert.matchedBecause.map((tag, i) => (
                   <span key={i}>
-                    <span className="font-mono text-[10px] text-[var(--foreground)]/70 tracking-wide">
+                    <span className="font-mono text-[10px] text-white/70 tracking-wide">
                       {tag}
                     </span>
                     {i < alert.matchedBecause.length - 1 && (
@@ -347,9 +433,9 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
                 style={{
                   color:
                     alert.confidence === 'high'
-                      ? '#059669'
+                      ? '#10B981'
                       : alert.confidence === 'medium'
-                        ? 'var(--severity-medium)'
+                        ? '#D97706'
                         : 'var(--muted-foreground)',
                 }}
               >
@@ -361,7 +447,7 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 font-mono text-[10px] text-[var(--accent)] hover:underline uppercase tracking-wider min-h-[28px]"
+                  className="inline-flex items-center gap-1 font-mono text-[10px] text-indigo-400 hover:underline uppercase tracking-wider min-h-[28px]"
                 >
                   Source
                   <ExternalLink className="h-3 w-3" />
@@ -379,7 +465,7 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
                 'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5',
                 'text-xs font-medium text-[var(--muted-foreground)]',
                 'border border-[var(--border)]',
-                'hover:bg-[var(--muted)] hover:text-[var(--foreground)]',
+                'hover:bg-white/[0.06] hover:text-[var(--foreground)]',
                 'transition-colors duration-150 cursor-pointer min-h-[34px]',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]'
               )}
@@ -394,11 +480,11 @@ export function AlertCard({ alert, onDismiss, onSave }: AlertCardProps) {
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5',
                 'text-xs font-medium',
-                'transition-colors duration-150 cursor-pointer min-h-[34px]',
+                'transition-all duration-150 cursor-pointer min-h-[34px]',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
                 alert.savedForLater
-                  ? 'bg-[var(--accent)] text-white'
-                  : 'border border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+                  ? 'bg-indigo-500 text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)]'
+                  : 'border border-[var(--border)] text-[var(--muted-foreground)] hover:border-indigo-500/50 hover:text-indigo-400'
               )}
               aria-label={alert.savedForLater ? 'Unsave alert' : 'Save for later'}
             >

@@ -1,36 +1,9 @@
 import type { LegalChange } from '@/types/legal-change'
 import type { PersonalizedAlert } from '@/types/alert'
 import type { UserProfile } from '@/types/profile'
-
-const WORKER_URL =
-  import.meta.env.VITE_WORKER_URL || 'https://legisly-api.ashwanthbalakrishnan5.workers.dev'
+import { generateMockAlerts } from '@/data/mock-alerts'
 
 const CACHE_KEY_PREFIX = 'legisly-alerts-'
-
-interface AnalyzeResponse {
-  alerts: RawAlert[]
-  processedAt: string
-}
-
-// The shape returned by the worker before frontend merging
-interface RawAlert {
-  legalChangeId: string
-  relevanceScore: number
-  severity: 'high' | 'medium' | 'low'
-  summary: string
-  personalImpact: string
-  matchedBecause: string[]
-  actionItems: { action: string; deadline?: string; contactInfo?: string }[]
-  confidence: 'high' | 'medium' | 'low'
-  // These may already be populated by the worker, but we re-merge from source for safety
-  title?: string
-  category?: string
-  datePublished?: string
-  sourceUrl?: string
-  sourceDocument?: string
-  dismissed?: boolean
-  savedForLater?: boolean
-}
 
 function getCacheKey(profile: UserProfile, changeIds: string[]): string {
   const keyData = JSON.stringify({
@@ -61,7 +34,7 @@ function getCachedAlerts(
   changeIds: string[],
 ): PersonalizedAlert[] | null {
   const key = getCacheKey(profile, changeIds)
-  const raw = sessionStorage.getItem(key)
+  const raw = localStorage.getItem(key)
   if (!raw) return null
   try {
     return JSON.parse(raw) as PersonalizedAlert[]
@@ -77,12 +50,16 @@ function setCachedAlerts(
 ): void {
   const key = getCacheKey(profile, changeIds)
   try {
-    sessionStorage.setItem(key, JSON.stringify(alerts))
+    localStorage.setItem(key, JSON.stringify(alerts))
   } catch {
-    // sessionStorage may be full; silently fail
+    // localStorage may be full; silently fail
   }
 }
 
+/**
+ * Analyze a single batch of changes using mock data.
+ * Returns personalized alerts sorted by relevance (score >= 10 only).
+ */
 export async function analyzeChanges(
   profile: UserProfile,
   changes: LegalChange[],
@@ -93,68 +70,74 @@ export async function analyzeChanges(
   const cached = getCachedAlerts(profile, changeIds)
   if (cached) return cached
 
-  const response = await fetch(`${WORKER_URL}/api/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ profile, changes }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`)
-  }
-
-  const data: AnalyzeResponse = await response.json()
-
-  // Build a lookup map from the original changes for merging
-  const changeMap = new Map<string, LegalChange>()
-  for (const change of changes) {
-    changeMap.set(change.id, change)
-  }
-
-  // Merge alert data with original LegalChange data
-  const mergedAlerts: PersonalizedAlert[] = data.alerts.map((alert) => {
-    const originalChange = changeMap.get(alert.legalChangeId)
-    return {
-      legalChangeId: alert.legalChangeId,
-      relevanceScore: alert.relevanceScore,
-      severity: alert.severity,
-      summary: alert.summary,
-      personalImpact: alert.personalImpact,
-      matchedBecause: alert.matchedBecause,
-      actionItems: alert.actionItems,
-      confidence: alert.confidence,
-      // Merge from original change data for accuracy
-      title: originalChange?.title ?? alert.title ?? 'Unknown Change',
-      category: originalChange?.category ?? (alert.category as PersonalizedAlert['category']) ?? 'consumer',
-      datePublished: originalChange?.datePublished ?? alert.datePublished ?? '',
-      sourceUrl: originalChange?.sourceUrl ?? alert.sourceUrl ?? '',
-      sourceDocument: originalChange?.sourceDocument ?? alert.sourceDocument ?? '',
-      dismissed: false,
-      savedForLater: false,
-    }
-  })
+  // Use mock backend for demo
+  const alerts = await generateMockAlerts(profile, changes)
 
   // Sort by relevance score descending
-  mergedAlerts.sort((a, b) => b.relevanceScore - a.relevanceScore)
+  alerts.sort((a, b) => b.relevanceScore - a.relevanceScore)
 
-  // Filter out changes with relevance score below 10
-  const filteredAlerts = mergedAlerts.filter(
-    (alert) => alert.relevanceScore >= 10,
+  // Filter out low-relevance changes
+  const filtered = alerts.filter((a) => a.relevanceScore >= 10)
+
+  // Cache the result
+  setCachedAlerts(profile, changeIds, filtered)
+
+  return filtered
+}
+
+const BATCH_SIZE = 3
+
+/**
+ * Splits changes into batches and processes them in parallel.
+ * Calls onBatch as each batch completes so the UI shows results progressively.
+ */
+export async function analyzeChangesBatched(
+  profile: UserProfile,
+  changes: LegalChange[],
+  onBatch: (accumulated: PersonalizedAlert[], processedCount: number) => void,
+): Promise<PersonalizedAlert[]> {
+  const changeIds = changes.map((c) => c.id)
+
+  // Check full-set cache first
+  const cached = getCachedAlerts(profile, changeIds)
+  if (cached) {
+    onBatch(cached, changes.length)
+    return cached
+  }
+
+  // Split into batches
+  const batches: LegalChange[][] = []
+  for (let i = 0; i < changes.length; i += BATCH_SIZE) {
+    batches.push(changes.slice(i, i + BATCH_SIZE))
+  }
+
+  const accumulated: PersonalizedAlert[] = []
+  let processedChanges = 0
+
+  // Fire all batches in parallel, call onBatch as each resolves
+  await Promise.all(
+    batches.map(async (batch) => {
+      const results = await analyzeChanges(profile, batch)
+      processedChanges += batch.length
+      accumulated.push(...results)
+      accumulated.sort((a, b) => b.relevanceScore - a.relevanceScore)
+      onBatch([...accumulated], processedChanges)
+    }),
   )
 
-  // Cache the processed result
-  setCachedAlerts(profile, changeIds, filteredAlerts)
+  // Cache the full combined result
+  setCachedAlerts(profile, changeIds, accumulated)
 
-  return filteredAlerts
+  return accumulated
 }
 
 export function clearAlertCache(): void {
   const keys: string[] = []
-  for (let i = 0; i < sessionStorage.length; i++) {
-    const key = sessionStorage.key(i)
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
     if (key?.startsWith(CACHE_KEY_PREFIX)) {
       keys.push(key)
     }
   }
-  keys.forEach((k) => sessionStorage.removeItem(k))
+  keys.forEach((k) => localStorage.removeItem(k))
 }

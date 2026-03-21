@@ -8,9 +8,65 @@ import {
   useTransform,
   useSpring,
 } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/Logo'
+
+// -------------------------------------------------------------------
+// Floating geometric shape for background
+// -------------------------------------------------------------------
+function FloatingShape({
+  className,
+  delay = 0,
+  width = 400,
+  height = 100,
+  rotate = 0,
+  gradient = 'from-indigo-500/[0.15]',
+}: {
+  className?: string
+  delay?: number
+  width?: number
+  height?: number
+  rotate?: number
+  gradient?: string
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -150, rotate: rotate - 15 }}
+      animate={{ opacity: 1, y: 0, rotate }}
+      transition={{
+        duration: 2.4,
+        delay,
+        ease: [0.23, 0.86, 0.39, 0.96],
+        opacity: { duration: 1.2 },
+      }}
+      className={cn('absolute', className)}
+    >
+      <motion.div
+        animate={{ y: [0, 15, 0] }}
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+        style={{ width, height }}
+        className="relative"
+      >
+        <div
+          className={cn(
+            'absolute inset-0 rounded-full',
+            'bg-gradient-to-r to-transparent',
+            gradient,
+            'backdrop-blur-[2px] border border-white/[0.08]',
+            'shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]',
+            'after:absolute after:inset-0 after:rounded-full',
+            "after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.15),transparent_70%)]"
+          )}
+        />
+      </motion.div>
+    </motion.div>
+  )
+}
 
 // -------------------------------------------------------------------
 // Animated counter hook
@@ -51,7 +107,6 @@ function AnimatedCounter({
 function HeroAlertPreview() {
   const prefersReducedMotion = useReducedMotion()
 
-  // 3D tilt
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const mouseXSpring = useSpring(x, { stiffness: 150, damping: 15 })
@@ -74,43 +129,29 @@ function HeroAlertPreview() {
     })
   }
 
-  const handleMouseLeave = () => {
-    x.set(0)
-    y.set(0)
-    setIsHovered(false)
-  }
-
-  const handleMouseEnter = () => {
-    setIsHovered(true)
-  }
-
   return (
     <motion.div
-      className="relative w-full max-w-[380px] cursor-default"
+      className="relative w-full max-w-[400px] cursor-default"
       style={
         prefersReducedMotion
           ? undefined
-          : {
-              rotateX,
-              rotateY,
-              transformStyle: 'preserve-3d',
-            }
+          : { rotateX, rotateY, transformStyle: 'preserve-3d' }
       }
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => { x.set(0); y.set(0); setIsHovered(false) }}
+      onMouseEnter={() => setIsHovered(true)}
     >
       <div
         className={cn(
-          'relative overflow-hidden rounded-xl w-full',
-          'bg-white/80 backdrop-blur-sm',
-          'border border-black/[0.05]',
-          'transition-shadow duration-300'
+          'relative overflow-hidden rounded-2xl w-full',
+          'bg-white/[0.05] backdrop-blur-xl',
+          'border border-white/[0.1]',
+          'transition-all duration-300'
         )}
         style={{
           boxShadow: isHovered
-            ? '0 20px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.08)'
-            : '0 8px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06)',
+            ? '0 20px 60px rgba(99,102,241,0.2), 0 8px 20px rgba(0,0,0,0.3)'
+            : '0 8px 32px rgba(0,0,0,0.3), 0 0 60px rgba(99,102,241,0.08)',
         }}
       >
         {/* Spotlight overlay */}
@@ -118,37 +159,37 @@ function HeroAlertPreview() {
           <div
             className="pointer-events-none absolute inset-0 z-20 transition-opacity duration-300"
             style={{
-              background: `radial-gradient(350px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(196,112,62,0.10), transparent 45%)`,
+              background: `radial-gradient(350px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(139,92,246,0.15), transparent 45%)`,
             }}
           />
         )}
 
-        {/* Top accent gradient bar */}
+        {/* Top gradient accent bar */}
         <div
           className="h-[3px] w-full"
           style={{
-            background: 'linear-gradient(90deg, #7C3AED, #DC2626)',
+            background: 'linear-gradient(90deg, #6366F1, #8B5CF6, #F43F5E, #F59E0B)',
           }}
         />
 
         <div className="px-6 pt-5 pb-6">
           {/* Category label */}
-          <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+          <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-white/50">
             Immigration · High Priority
           </span>
 
           {/* Title */}
           <h3
-            className="mt-3 font-display text-[22px] text-[var(--foreground)]"
+            className="mt-3 font-display text-[22px] text-white/90"
             style={{ lineHeight: 1.2, letterSpacing: '-0.01em' }}
           >
             H-1B Weighted Selection Final Rule
           </h3>
 
-          {/* Personal impact as editorial pull-quote */}
+          {/* Personal impact */}
           <blockquote
-            className="mt-4 pl-4 text-[13px] leading-relaxed text-[var(--muted-foreground)]"
-            style={{ borderLeft: '2px solid #DC2626' }}
+            className="mt-4 pl-4 text-[13px] leading-relaxed text-white/50"
+            style={{ borderLeft: '2px solid #F43F5E' }}
           >
             As an F-1 student on OPT, the new weighted selection process
             directly affects your path to H-1B work authorization.
@@ -159,11 +200,7 @@ function HeroAlertPreview() {
             {['F-1 visa', 'OPT', 'STEM'].map((tag) => (
               <span
                 key={tag}
-                className="rounded-full px-2.5 py-1 text-[10px] font-mono tracking-wide"
-                style={{
-                  background: 'var(--muted)',
-                  color: 'var(--muted-foreground)',
-                }}
+                className="rounded-full px-2.5 py-1 text-[10px] font-mono tracking-wide bg-white/[0.06] text-white/60 border border-white/[0.08]"
               >
                 {tag}
               </span>
@@ -172,13 +209,12 @@ function HeroAlertPreview() {
         </div>
       </div>
 
-      {/* Reflection/glow beneath the card */}
+      {/* Glow beneath the card */}
       <div
-        className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 w-[85%] h-12 rounded-full blur-2xl"
+        className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 w-[80%] h-16 rounded-full blur-3xl"
         style={{
-          background:
-            'radial-gradient(ellipse, rgba(196,112,62,0.15) 0%, transparent 70%)',
-          opacity: isHovered ? 1 : 0.5,
+          background: 'radial-gradient(ellipse, rgba(99,102,241,0.25) 0%, transparent 70%)',
+          opacity: isHovered ? 1 : 0.6,
           transition: 'opacity 0.3s',
         }}
       />
@@ -187,7 +223,7 @@ function HeroAlertPreview() {
 }
 
 // -------------------------------------------------------------------
-// Hero heading lines (staggered reveal)
+// Heading lines (staggered reveal)
 // -------------------------------------------------------------------
 const HEADING_LINES = [
   { text: 'The gap between', italic: false },
@@ -210,73 +246,87 @@ export function Hero() {
 
   const stagger = prefersReducedMotion ? 0 : 0.15
 
+  const fadeUpVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 1,
+        delay: 0.5 + i * 0.2,
+        ease: [0.25, 0.4, 0.25, 1] as [number, number, number, number],
+      },
+    }),
+  }
+
   return (
     <section
       ref={sectionRef}
       className="relative min-h-dvh w-full overflow-hidden"
-      style={{ background: 'var(--background)' }}
+      style={{ background: 'var(--surface-dark)' }}
     >
       {/* ========== BACKGROUND LAYERS ========== */}
 
-      {/* Animated mesh gradient - more dramatic */}
-      <div className="pointer-events-none absolute inset-0 hero-mesh-gradient" />
+      {/* Base gradient */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-500/[0.07] via-transparent to-rose-500/[0.05] blur-3xl" />
 
-      {/* Floating translucent orbs - increased opacity */}
-      <div
-        className="pointer-events-none absolute rounded-full"
-        style={{
-          width: 700,
-          height: 700,
-          top: '-18%',
-          right: '-10%',
-          background:
-            'radial-gradient(circle, rgba(196,112,62,0.14) 0%, transparent 70%)',
-          animation: 'heroOrb1 25s ease-in-out infinite',
-        }}
-      />
-      <div
-        className="pointer-events-none absolute rounded-full"
-        style={{
-          width: 600,
-          height: 600,
-          bottom: '-15%',
-          left: '-10%',
-          background:
-            'radial-gradient(circle, rgba(26,43,74,0.12) 0%, transparent 70%)',
-          animation: 'heroOrb2 30s ease-in-out infinite',
-        }}
-      />
-      <div
-        className="pointer-events-none absolute rounded-full"
-        style={{
-          width: 400,
-          height: 400,
-          top: '30%',
-          left: '50%',
-          background:
-            'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)',
-          animation: 'heroOrb3 22s ease-in-out infinite',
-        }}
-      />
+      {/* Mesh grid */}
+      <div className="pointer-events-none absolute inset-0 mesh-grid" />
 
-      {/* Dot grid overlay */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, var(--border) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-          opacity: 0.35,
-        }}
-      />
+      {/* Floating geometric shapes */}
+      <div className="absolute inset-0 overflow-hidden">
+        <FloatingShape
+          delay={0.3}
+          width={600}
+          height={140}
+          rotate={12}
+          gradient="from-indigo-500/[0.12]"
+          className="left-[-10%] md:left-[-5%] top-[15%] md:top-[20%]"
+        />
+        <FloatingShape
+          delay={0.5}
+          width={500}
+          height={120}
+          rotate={-15}
+          gradient="from-rose-500/[0.12]"
+          className="right-[-5%] md:right-[0%] top-[70%] md:top-[75%]"
+        />
+        <FloatingShape
+          delay={0.4}
+          width={300}
+          height={80}
+          rotate={-8}
+          gradient="from-violet-500/[0.12]"
+          className="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%]"
+        />
+        <FloatingShape
+          delay={0.6}
+          width={200}
+          height={60}
+          rotate={20}
+          gradient="from-amber-500/[0.12]"
+          className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
+        />
+        <FloatingShape
+          delay={0.7}
+          width={150}
+          height={40}
+          rotate={-25}
+          gradient="from-cyan-500/[0.12]"
+          className="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
+        />
+      </div>
+
+      {/* Vignette */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--surface-dark)] via-transparent to-[var(--surface-dark)]/80" />
 
       {/* ========== TOP BAR ========== */}
       <div className="absolute top-0 left-0 right-0 z-20 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Logo size="sm" />
+          <Logo size="sm" inverted />
           <Link
             to="/onboarding"
-            className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors min-h-[44px] flex items-center"
+            className="text-sm font-medium text-white/50 hover:text-white transition-colors min-h-[44px] flex items-center"
           >
             Get Started
           </Link>
@@ -288,9 +338,23 @@ export function Hero() {
         <div className="flex min-h-dvh flex-col lg:flex-row items-center lg:items-center gap-12 lg:gap-16 py-16 lg:py-0">
           {/* ===== LEFT COLUMN: Text ===== */}
           <div className="flex-1 flex flex-col justify-center pt-12 lg:pt-0">
+            {/* Badge */}
+            <motion.div
+              custom={0}
+              variants={fadeUpVariants}
+              initial="hidden"
+              animate="visible"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-8 w-fit"
+            >
+              <Sparkles className="h-3 w-3 text-violet-400" />
+              <span className="text-xs text-white/50 tracking-wide">
+                AI-Powered Legal Monitoring
+              </span>
+            </motion.div>
+
             {/* Heading with staggered line reveal */}
             <motion.h1
-              className="font-display text-[var(--foreground)]"
+              className="font-display"
               style={{
                 fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
                 letterSpacing: '-0.02em',
@@ -300,24 +364,25 @@ export function Hero() {
               animate="visible"
               variants={{
                 hidden: {},
-                visible: {
-                  transition: { staggerChildren: stagger },
-                },
+                visible: { transition: { staggerChildren: stagger } },
               }}
             >
               {HEADING_LINES.map((line, i) => (
                 <motion.span
                   key={i}
-                  className={cn('block', line.italic && 'italic')}
+                  className={cn(
+                    'block',
+                    line.italic && 'italic',
+                    i < 3 ? 'text-gradient-hero' : ''
+                  )}
+                  style={
+                    i >= 3 ? { color: 'rgba(255,255,255,0.85)' } : undefined
+                  }
                   variants={{
                     hidden: prefersReducedMotion
                       ? {}
                       : { opacity: 0, y: 18, filter: 'blur(8px)' },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      filter: 'blur(0px)',
-                    },
+                    visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
                   }}
                   transition={lineTransition}
                 >
@@ -325,18 +390,14 @@ export function Hero() {
                 </motion.span>
               ))}
 
-              {/* Spacer + tagline */}
+              {/* Tagline with vivid gradient */}
               <motion.span
-                className="block mt-4 text-[var(--accent)]"
+                className="block mt-4 text-gradient-vivid"
                 variants={{
                   hidden: prefersReducedMotion
                     ? {}
                     : { opacity: 0, y: 18, filter: 'blur(8px)' },
-                  visible: {
-                    opacity: 1,
-                    y: 0,
-                    filter: 'blur(0px)',
-                  },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
                 }}
                 transition={lineTransition}
               >
@@ -356,26 +417,21 @@ export function Hero() {
               transition={
                 prefersReducedMotion
                   ? { duration: 0 }
-                  : {
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 20,
-                      delay: 0.7,
-                    }
+                  : { type: 'spring', stiffness: 200, damping: 20, delay: 0.7 }
               }
             >
               <Link
                 to="/onboarding"
                 className={cn(
                   'group relative inline-flex items-center gap-2 overflow-hidden',
-                  'rounded-lg px-8 py-4 text-base font-semibold text-white',
+                  'rounded-xl px-8 py-4 text-base font-semibold text-white',
                   'transition-all duration-200',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-dark)]',
                   'min-h-[48px]'
                 )}
                 style={{
-                  background: 'linear-gradient(135deg, var(--accent), #B05E2E)',
-                  boxShadow: '0 4px 20px rgba(196,112,62,0.3)',
+                  background: 'linear-gradient(135deg, #6366F1, #8B5CF6, #A855F7)',
+                  boxShadow: '0 4px 24px rgba(99,102,241,0.4), 0 0 60px rgba(139,92,246,0.15)',
                 }}
               >
                 {/* Shimmer sweep */}
@@ -394,7 +450,7 @@ export function Hero() {
               </Link>
             </motion.div>
 
-            {/* Stat counters - FIXED: grid layout with consistent structure */}
+            {/* Stat counters */}
             <motion.div
               className="mt-10 grid grid-cols-3 gap-6 max-w-md"
               initial={prefersReducedMotion ? undefined : { opacity: 0, y: 12 }}
@@ -402,28 +458,23 @@ export function Hero() {
               transition={
                 prefersReducedMotion
                   ? { duration: 0 }
-                  : {
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 20,
-                      delay: 0.9,
-                    }
+                  : { type: 'spring', stiffness: 200, damping: 20, delay: 0.9 }
               }
             >
               <div className="flex flex-col">
-                <span className="font-mono text-2xl font-medium text-[var(--foreground)]">
+                <span className="font-mono text-2xl font-medium text-white/90">
                   <AnimatedCounter value={15} />+
                 </span>
-                <span className="font-mono text-[11px] text-[var(--muted-foreground)] tracking-wide uppercase mt-1">
+                <span className="font-mono text-[11px] text-white/40 tracking-wide uppercase mt-1">
                   changes tracked
                 </span>
               </div>
 
               <div className="flex flex-col">
-                <span className="font-mono text-2xl font-medium text-[var(--foreground)]">
+                <span className="font-mono text-2xl font-medium text-white/90">
                   <AnimatedCounter value={9} />
                 </span>
-                <span className="font-mono text-[11px] text-[var(--muted-foreground)] tracking-wide uppercase mt-1">
+                <span className="font-mono text-[11px] text-white/40 tracking-wide uppercase mt-1">
                   categories
                 </span>
               </div>
@@ -431,21 +482,21 @@ export function Hero() {
               <div className="flex flex-col">
                 <span className="flex items-center gap-1.5">
                   <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
                   </span>
-                  <span className="font-mono text-sm font-medium text-[var(--accent)]">
+                  <span className="font-mono text-sm font-medium text-emerald-400">
                     Live
                   </span>
                 </span>
-                <span className="font-mono text-[11px] text-[var(--muted-foreground)] tracking-wide uppercase mt-1">
+                <span className="font-mono text-[11px] text-white/40 tracking-wide uppercase mt-1">
                   AI powered
                 </span>
               </div>
             </motion.div>
           </div>
 
-          {/* ===== RIGHT COLUMN: Card preview with 3D tilt ===== */}
+          {/* ===== RIGHT COLUMN: Card preview ===== */}
           <motion.div
             className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:justify-end"
             style={{ perspective: 1200 }}
@@ -458,71 +509,13 @@ export function Hero() {
             transition={
               prefersReducedMotion
                 ? { duration: 0 }
-                : {
-                    type: 'spring',
-                    stiffness: 120,
-                    damping: 20,
-                    delay: 0.5,
-                  }
+                : { type: 'spring', stiffness: 120, damping: 20, delay: 0.5 }
             }
           >
             <HeroAlertPreview />
           </motion.div>
         </div>
       </div>
-
-      {/* ========== CSS ANIMATIONS ========== */}
-      <style>{`
-        .hero-mesh-gradient {
-          background:
-            radial-gradient(ellipse 80% 60% at 25% 15%, rgba(26,43,74,0.10) 0%, transparent 55%),
-            radial-gradient(ellipse 60% 50% at 75% 35%, rgba(196,112,62,0.09) 0%, transparent 50%),
-            radial-gradient(ellipse 70% 50% at 50% 85%, rgba(124,58,237,0.06) 0%, transparent 50%);
-          animation: heroMeshShift 20s ease-in-out infinite;
-        }
-
-        @keyframes heroMeshShift {
-          0%, 100% {
-            background:
-              radial-gradient(ellipse 80% 60% at 25% 15%, rgba(26,43,74,0.10) 0%, transparent 55%),
-              radial-gradient(ellipse 60% 50% at 75% 35%, rgba(196,112,62,0.09) 0%, transparent 50%),
-              radial-gradient(ellipse 70% 50% at 50% 85%, rgba(124,58,237,0.06) 0%, transparent 50%);
-          }
-          33% {
-            background:
-              radial-gradient(ellipse 70% 65% at 35% 25%, rgba(26,43,74,0.12) 0%, transparent 55%),
-              radial-gradient(ellipse 65% 55% at 65% 45%, rgba(196,112,62,0.10) 0%, transparent 50%),
-              radial-gradient(ellipse 60% 45% at 40% 75%, rgba(124,58,237,0.05) 0%, transparent 50%);
-          }
-          66% {
-            background:
-              radial-gradient(ellipse 85% 55% at 20% 20%, rgba(26,43,74,0.09) 0%, transparent 55%),
-              radial-gradient(ellipse 55% 60% at 80% 30%, rgba(196,112,62,0.12) 0%, transparent 50%),
-              radial-gradient(ellipse 75% 55% at 55% 80%, rgba(124,58,237,0.07) 0%, transparent 50%);
-          }
-        }
-
-        @keyframes heroOrb1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(-35px, 25px) scale(1.06); }
-          66% { transform: translate(25px, -18px) scale(0.96); }
-        }
-        @keyframes heroOrb2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -25px) scale(1.04); }
-          66% { transform: translate(-20px, 30px) scale(0.97); }
-        }
-        @keyframes heroOrb3 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(-25px, -30px) scale(1.07); }
-          66% { transform: translate(35px, 18px) scale(0.94); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .hero-mesh-gradient { animation: none !important; }
-          [style*="animation: heroOrb"] { animation: none !important; }
-        }
-      `}</style>
     </section>
   )
 }

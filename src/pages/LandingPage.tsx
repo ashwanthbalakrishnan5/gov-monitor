@@ -8,12 +8,12 @@ export function LandingPage() {
   return (
     <div
       className="relative w-full"
-      style={{ scrollBehavior: 'smooth', background: 'var(--background)' }}
+      style={{ scrollBehavior: 'smooth', background: 'var(--surface-dark)' }}
     >
-      {/* Grain texture overlay -- CSS-only, no JS, no perf hit */}
+      {/* Grain texture overlay */}
       <svg
-        className="pointer-events-none fixed inset-0 z-50 h-full w-full"
-        style={{ opacity: 0.022 }}
+        className="pointer-events-none fixed inset-0 z-10 h-full w-full"
+        style={{ opacity: 0.03 }}
       >
         <filter id="landing-grain">
           <feTurbulence

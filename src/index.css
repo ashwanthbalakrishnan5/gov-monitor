@@ -18,13 +18,21 @@
   --color-copper: #C4703E;
   --color-copper-light: #D4915A;
 
+  /* Colors - Vibrant Accents */
+  --color-vivid-indigo: #6366F1;
+  --color-vivid-violet: #8B5CF6;
+  --color-vivid-rose: #F43F5E;
+  --color-vivid-amber: #F59E0B;
+  --color-vivid-cyan: #06B6D4;
+  --color-vivid-emerald: #10B981;
+
   /* Colors - Severity */
   --color-severity-high: #DC2626;
-  --color-severity-high-bg: #FEF2F2;
+  --color-severity-high-bg: rgba(220, 38, 38, 0.12);
   --color-severity-medium: #D97706;
-  --color-severity-medium-bg: #FFFBEB;
+  --color-severity-medium-bg: rgba(217, 119, 6, 0.12);
   --color-severity-low: #2563EB;
-  --color-severity-low-bg: #EFF6FF;
+  --color-severity-low-bg: rgba(37, 99, 235, 0.12);
 
   /* Colors - Categories */
   --color-cat-immigration: #7C3AED;
@@ -39,56 +47,79 @@
 
 :root {
   /* Core */
-  --background: #FAFAF9;
-  --foreground: #0C0C0C;
-
-  /* Surfaces */
-  --card: #FFFFFF;
-  --card-foreground: #0C0C0C;
-  --muted: #F0EDEB;
-  --muted-foreground: #6B6560;
-
-  /* Brand */
-  --primary: #1A2B4A;
-  --primary-foreground: #FFFFFF;
-  --secondary: #2D4A6F;
-  --secondary-foreground: #FFFFFF;
-  --accent: #C4703E;
-  --accent-foreground: #FFFFFF;
-
-  /* Borders */
-  --border: #E8E4E1;
-  --border-strong: #D1CBC5;
-  --ring: #1A2B4A;
-
-  /* Destructive */
-  --destructive: #DC2626;
-  --destructive-foreground: #FFFFFF;
-
-  color-scheme: light;
-}
-
-[data-theme="dark"] {
-  --background: #0A0A0B;
+  --background: #0A0A0F;
   --foreground: #EDEDEF;
 
-  --card: #141416;
+  /* Surface variants */
+  --surface-dark: #0A0A0F;
+  --surface-dark-2: #12121A;
+
+  /* Surfaces */
+  --card: rgba(255, 255, 255, 0.04);
   --card-foreground: #EDEDEF;
-  --muted: #1C1C1F;
-  --muted-foreground: #8A8F98;
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: rgba(255, 255, 255, 0.50);
 
-  --primary: #94A9C9;
-  --primary-foreground: #0A0A0B;
-  --secondary: #6B89B0;
-  --secondary-foreground: #0A0A0B;
-  --accent: #D4915A;
-  --accent-foreground: #0A0A0B;
+  /* Brand */
+  --primary: #EDEDEF;
+  --primary-foreground: #0A0A0F;
+  --secondary: #8B5CF6;
+  --secondary-foreground: #FFFFFF;
+  --accent: #6366F1;
+  --accent-foreground: #FFFFFF;
 
+  /* Popover */
+  --popover: #12121A;
+  --popover-foreground: #EDEDEF;
+
+  /* Borders */
   --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --ring: #6366F1;
+
+  /* Destructive */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* Elevation System */
+  --elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --elevation-2: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03);
+  --elevation-3: 0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  --elevation-4: 0 24px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  /* Glass System */
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-blur: 20px;
+  --glass-blur-heavy: 40px;
+  --glass-saturate: 180%;
+  --glass-spotlight: rgba(99, 102, 241, 0.06);
+
+  /* Dark Glass System (same as main glass now) */
+  --glass-dark-bg: rgba(255, 255, 255, 0.03);
+  --glass-dark-border: rgba(255, 255, 255, 0.08);
+  --glass-dark-border-hover: rgba(255, 255, 255, 0.15);
+
+  /* Atmospheric */
+  --atmo-orb-1: rgba(99, 102, 241, 0.06);
+  --atmo-orb-2: rgba(139, 92, 246, 0.05);
+  --atmo-orb-3: rgba(244, 63, 94, 0.04);
+
+  /* Glow */
+  --glow-copper: rgba(196, 112, 62, 0.25);
+  --glow-indigo: rgba(99, 102, 241, 0.3);
+  --glow-violet: rgba(139, 92, 246, 0.3);
+  --glow-rose: rgba(244, 63, 94, 0.3);
+  --glow-cyan: rgba(6, 182, 212, 0.3);
+  --glow-severity-high: rgba(220, 38, 38, 0.20);
+  --glow-severity-medium: rgba(217, 119, 6, 0.15);
+  --glow-severity-low: rgba(37, 99, 235, 0.12);
 
   color-scheme: dark;
 }
+
 
 /* Base styles */
 *,
@@ -115,7 +146,204 @@ body {
   line-height: 1.05;
 }
 
-/* Scrollbar */
+/* ========================================
+   GLASS SYSTEM
+   ======================================== */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-panel-heavy {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-panel-dark {
+  background: var(--glass-dark-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-dark-border);
+}
+
+/* ========================================
+   ATMOSPHERIC BACKGROUND
+   ======================================== */
+.atmo-bg {
+  position: relative;
+  background-color: var(--background);
+}
+
+.atmo-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, var(--atmo-orb-1) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 30%, var(--atmo-orb-2) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, var(--atmo-orb-3) 0%, transparent 50%);
+  animation: atmoShift 25s ease-in-out infinite;
+}
+
+@keyframes atmoShift {
+  0%, 100% {
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, var(--atmo-orb-1) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 50% at 80% 30%, var(--atmo-orb-2) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 40% at 50% 80%, var(--atmo-orb-3) 0%, transparent 50%);
+  }
+  33% {
+    background:
+      radial-gradient(ellipse 70% 55% at 30% 20%, var(--atmo-orb-1) 0%, transparent 55%),
+      radial-gradient(ellipse 65% 55% at 70% 45%, var(--atmo-orb-2) 0%, transparent 50%),
+      radial-gradient(ellipse 55% 45% at 40% 70%, var(--atmo-orb-3) 0%, transparent 50%);
+  }
+  66% {
+    background:
+      radial-gradient(ellipse 85% 50% at 15% 15%, var(--atmo-orb-1) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 60% at 85% 35%, var(--atmo-orb-2) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 50% at 55% 85%, var(--atmo-orb-3) 0%, transparent 50%);
+  }
+}
+
+/* ========================================
+   DATA STREAM / ALIVE LOADING
+   ======================================== */
+@keyframes dataStream {
+  0% {
+    background-position: 200% 0;
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    background-position: -200% 0;
+    opacity: 0.4;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px 2px var(--glow-indigo);
+    opacity: 0.6;
+  }
+  50% {
+    box-shadow: 0 0 16px 4px var(--glow-indigo);
+    opacity: 1;
+  }
+}
+
+@keyframes waveProgress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-15px, 10px) scale(1.03); }
+  50% { transform: translate(10px, -15px) scale(0.97); }
+  75% { transform: translate(15px, 5px) scale(1.02); }
+}
+
+@keyframes borderGlow {
+  0%, 100% {
+    border-color: var(--glass-border);
+  }
+  50% {
+    border-color: var(--glass-border-hover);
+  }
+}
+
+/* ========================================
+   AURORA GRADIENT BACKGROUND
+   ======================================== */
+@keyframes auroraShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.aurora-bg {
+  background: linear-gradient(
+    -45deg,
+    rgba(99, 102, 241, 0.15),
+    rgba(139, 92, 246, 0.12),
+    rgba(244, 63, 94, 0.10),
+    rgba(245, 158, 11, 0.08),
+    rgba(6, 182, 212, 0.12),
+    rgba(99, 102, 241, 0.15)
+  );
+  background-size: 400% 400%;
+  animation: auroraShift 15s ease-in-out infinite;
+}
+
+/* ========================================
+   GRADIENT TEXT UTILITY
+   ======================================== */
+.text-gradient-vivid {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6, #F43F5E, #F59E0B);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-hero {
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.9) 40%, #a78bfa 70%, #f472b6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Shimmer sweep for skeleton/loading */
+.shimmer-stream {
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(99, 102, 241, 0.06) 35%,
+    rgba(139, 92, 246, 0.10) 50%,
+    rgba(99, 102, 241, 0.06) 65%,
+    transparent 80%
+  );
+  background-size: 400% 100%;
+  animation: dataStream 3s ease-in-out infinite;
+}
+
+
+/* ========================================
+   SEVERITY GLOW EFFECTS
+   ======================================== */
+.severity-glow-high {
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.15), 0 0 20px -4px var(--glow-severity-high);
+}
+
+.severity-glow-medium {
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.12), 0 0 16px -4px var(--glow-severity-medium);
+}
+
+.severity-glow-low {
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.10), 0 0 12px -4px var(--glow-severity-low);
+}
+
+/* ========================================
+   MESH GRID PATTERN (for dark sections)
+   ======================================== */
+.mesh-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ========================================
+   SCROLLBAR
+   ======================================== */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -133,7 +361,13 @@ body {
   background: var(--muted-foreground);
 }
 
-/* Reduced motion */
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -142,5 +376,14 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .atmo-bg::before {
+    animation: none !important;
+  }
+  .shimmer-stream {
+    animation: none !important;
+  }
+  .aurora-bg {
+    animation: none !important;
   }
 }

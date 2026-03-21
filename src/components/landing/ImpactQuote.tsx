@@ -10,7 +10,7 @@ import {
 } from 'framer-motion'
 
 // -------------------------------------------------------------------
-// Animated number counter that counts up from 0
+// Animated number counter
 // -------------------------------------------------------------------
 function AnimatedNumber({
   target,
@@ -48,7 +48,7 @@ function AnimatedNumber({
 }
 
 // -------------------------------------------------------------------
-// Word-by-word reveal for quote text
+// Word-by-word reveal
 // -------------------------------------------------------------------
 function WordReveal({
   text,
@@ -114,37 +114,28 @@ export function ImpactQuote() {
     <section
       ref={sectionRef}
       className="relative w-full py-24 lg:py-32 overflow-hidden"
-      style={{ background: 'var(--background)' }}
+      style={{ background: 'var(--surface-dark)' }}
     >
-      {/* Subtle background accent */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(196,112,62,0.04) 0%, transparent 60%)',
-        }}
-      />
+      {/* Colorful gradient accent */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-indigo-500/[0.06] via-violet-500/[0.08] to-rose-500/[0.06] rounded-full blur-[100px]" />
+      </div>
 
-      {/* Background texture pattern */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, var(--border) 0.5px, transparent 0.5px)',
-          backgroundSize: '24px 24px',
-          opacity: 0.2,
-        }}
-      />
+      {/* Mesh grid */}
+      <div className="pointer-events-none absolute inset-0 mesh-grid" />
 
-      <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
         <motion.div
           className="relative pl-6 sm:pl-8 lg:pl-10"
           style={prefersReducedMotion ? undefined : { y: parallaxY }}
         >
-          {/* Accent vertical pull-quote marker */}
+          {/* Gradient accent bar */}
           <motion.div
             className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full origin-top"
-            style={{ backgroundColor: 'var(--accent)', opacity: 0.6 }}
+            style={{
+              background: 'linear-gradient(180deg, #6366F1, #F43F5E, #F59E0B)',
+              opacity: 0.7,
+            }}
             initial={prefersReducedMotion ? undefined : { scaleY: 0 }}
             animate={isInView ? { scaleY: 1 } : undefined}
             transition={
@@ -154,20 +145,17 @@ export function ImpactQuote() {
             }
           />
 
-          {/* Quote text with word-by-word reveal */}
           <blockquote>
             <p
-              className="font-display italic text-[var(--foreground)]"
+              className="font-display italic text-white/85"
               style={{
                 fontSize: 'clamp(1.5rem, 3.5vw, 2.75rem)',
                 letterSpacing: '-0.02em',
                 lineHeight: 1.25,
               }}
             >
-              {/* Animated number inline */}
               <motion.span
-                className="inline-block not-italic tabular-nums"
-                style={{ color: 'var(--accent)' }}
+                className="inline-block not-italic tabular-nums text-gradient-vivid"
                 initial={
                   prefersReducedMotion ? undefined : { opacity: 0, scale: 0.8 }
                 }
@@ -201,7 +189,6 @@ export function ImpactQuote() {
             </p>
           </blockquote>
 
-          {/* Citation */}
           <motion.cite
             className="block mt-8 not-italic"
             initial={
@@ -211,15 +198,10 @@ export function ImpactQuote() {
             transition={
               prefersReducedMotion
                 ? { duration: 0 }
-                : {
-                    type: 'spring',
-                    stiffness: 120,
-                    damping: 20,
-                    delay: 1.2,
-                  }
+                : { type: 'spring', stiffness: 120, damping: 20, delay: 1.2 }
             }
           >
-            <span className="font-mono text-xs text-[var(--muted-foreground)] uppercase tracking-[0.08em]">
+            <span className="font-mono text-xs text-white/40 uppercase tracking-[0.08em]">
               Real data from the Arizona healthcare marketplace
             </span>
           </motion.cite>

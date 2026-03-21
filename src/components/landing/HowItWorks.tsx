@@ -1,16 +1,24 @@
-import { useRef } from 'react'
-import { motion, useInView, useReducedMotion } from 'framer-motion'
+import { useRef, useState } from 'react'
+import {
+  motion,
+  useInView,
+  useReducedMotion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from 'framer-motion'
 import { UserCircle, Search, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useMouseSpotlight } from '@/hooks/use-mouse-spotlight'
 
 const STEPS = [
   {
     number: '01',
     title: 'Tell us about you',
     description:
-      'Quick profile setup with just 3 required fields. Your data stays in your browser.',
+      'Quick profile setup with just 3 required fields. Your data is never stored on our servers.',
     icon: UserCircle,
+    gradient: 'from-indigo-500 to-cyan-400',
+    glowColor: 'rgba(99, 102, 241, 0.3)',
   },
   {
     number: '02',
@@ -18,6 +26,8 @@ const STEPS = [
     description:
       '15+ real legal changes from federal, state, and local sources, verified.',
     icon: Search,
+    gradient: 'from-violet-500 to-purple-400',
+    glowColor: 'rgba(139, 92, 246, 0.3)',
   },
   {
     number: '03',
@@ -25,73 +35,121 @@ const STEPS = [
     description:
       'AI analysis of how each change affects you, with action items.',
     icon: Bell,
+    gradient: 'from-rose-500 to-amber-400',
+    glowColor: 'rgba(244, 63, 94, 0.3)',
   },
 ]
 
 // -------------------------------------------------------------------
-// Card with mouse-following spotlight
+// Card with 3D tilt + gradient border glow
 // -------------------------------------------------------------------
 function StepCard({
   step,
 }: {
   step: (typeof STEPS)[number]
 }) {
-  const { mousePos, isHovered, handlers } = useMouseSpotlight()
-  const Icon = step.icon
   const prefersReducedMotion = useReducedMotion()
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const mouseXSpring = useSpring(mouseX, { stiffness: 200, damping: 20 })
+  const mouseYSpring = useSpring(mouseY, { stiffness: 200, damping: 20 })
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['6deg', '-6deg'])
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-6deg', '6deg'])
+
+  const [spotlightPos, setSpotlightPos] = useState({ x: 0, y: 0 })
+  const [isHovered, setIsHovered] = useState(false)
+
+  const Icon = step.icon
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (prefersReducedMotion || !cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    mouseX.set((e.clientX - rect.left) / rect.width - 0.5)
+    mouseY.set((e.clientY - rect.top) / rect.height - 0.5)
+    setSpotlightPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+  }
 
   return (
-    <div
-      {...handlers}
-      className={cn(
-        'group relative rounded-xl p-6 lg:p-8 h-full',
-        'transition-all duration-300',
-        'hover:scale-[1.02]'
-      )}
-      style={{
-        background: 'rgba(255,255,255,0.60)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: isHovered
-          ? '0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05)'
-          : '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
-        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-        borderColor: isHovered ? 'rgba(196,112,62,0.15)' : 'rgba(0,0,0,0.06)',
-      }}
-    >
-      {/* Spotlight overlay */}
-      {isHovered && !prefersReducedMotion && (
-        <div
-          className="pointer-events-none absolute inset-0 z-10 rounded-xl transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(500px circle at ${mousePos.x}px ${mousePos.y}px, rgba(196,112,62,0.07), transparent 40%)`,
-          }}
-        />
-      )}
-
-      {/* Step number */}
-      <span
-        className="font-mono text-4xl font-medium"
-        style={{ color: 'var(--accent)', opacity: 0.2 }}
+    <div style={{ perspective: 1000 }}>
+      <motion.div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => {
+          setIsHovered(false)
+          mouseX.set(0)
+          mouseY.set(0)
+        }}
+        className={cn(
+          'group relative rounded-2xl h-full overflow-hidden',
+          'bg-white/[0.03] backdrop-blur-sm',
+          'border border-white/[0.08]',
+          'transition-all duration-300',
+        )}
+        style={
+          prefersReducedMotion
+            ? {
+                boxShadow: isHovered
+                  ? `0 20px 40px ${step.glowColor}`
+                  : '0 4px 16px rgba(0,0,0,0.2)',
+                transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+              }
+            : {
+                rotateX,
+                rotateY,
+                transformStyle: 'preserve-3d' as const,
+                boxShadow: isHovered
+                  ? `0 20px 40px ${step.glowColor}`
+                  : '0 4px 16px rgba(0,0,0,0.2)',
+                borderColor: isHovered ? 'rgba(255,255,255,0.15)' : undefined,
+              }
+        }
       >
-        {step.number}
-      </span>
+        {/* Top gradient line */}
+        <div className={cn('h-[2px] w-full bg-gradient-to-r', step.gradient)} />
 
-      {/* Icon */}
-      <div className="mt-4 mb-4">
-        <Icon className="h-7 w-7" style={{ color: 'var(--accent)' }} />
-      </div>
+        {/* Spotlight overlay */}
+        {isHovered && !prefersReducedMotion && (
+          <div
+            className="pointer-events-none absolute inset-0 z-10 rounded-2xl transition-opacity duration-300"
+            style={{
+              background: `radial-gradient(400px circle at ${spotlightPos.x}px ${spotlightPos.y}px, ${step.glowColor.replace('0.3', '0.08')}, transparent 40%)`,
+            }}
+          />
+        )}
 
-      {/* Title */}
-      <h3 className="text-lg font-semibold text-[var(--foreground)]">
-        {step.title}
-      </h3>
+        <div className="relative z-20 p-6 lg:p-8">
+          {/* Step number */}
+          <span className={cn(
+            'font-mono text-5xl font-bold bg-gradient-to-r bg-clip-text',
+            step.gradient
+          )} style={{ WebkitTextFillColor: 'transparent', opacity: 0.25 }}>
+            {step.number}
+          </span>
 
-      {/* Description */}
-      <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
-        {step.description}
-      </p>
+          {/* Icon */}
+          <div className="mt-4 mb-4">
+            <div className={cn(
+              'inline-flex items-center justify-center rounded-xl p-2.5 bg-gradient-to-r',
+              step.gradient
+            )}>
+              <Icon className="h-6 w-6 text-white" />
+            </div>
+          </div>
+
+          {/* Title */}
+          <h3 className="text-lg font-semibold text-white/90">
+            {step.title}
+          </h3>
+
+          {/* Description */}
+          <p className="mt-2 text-sm leading-relaxed text-white/50">
+            {step.description}
+          </p>
+        </div>
+      </motion.div>
     </div>
   )
 }
@@ -103,26 +161,18 @@ function AnimatedBeam() {
   return (
     <div className="hidden md:flex items-center justify-center w-12 lg:w-16 relative self-center">
       <div className="relative w-full h-[2px] overflow-hidden">
-        {/* Static line */}
-        <div
-          className="absolute inset-0"
-          style={{ background: 'var(--border-strong)' }}
-        />
-        {/* Animated pulse */}
+        <div className="absolute inset-0 bg-white/10" />
         <div
           className="absolute inset-y-0 w-12 animate-beam-pulse"
           style={{
-            background:
-              'linear-gradient(90deg, transparent, var(--accent), transparent)',
+            background: 'linear-gradient(90deg, transparent, #8B5CF6, transparent)',
           }}
         />
       </div>
-      {/* Arrow tip */}
       <svg
-        className="absolute -right-1 h-3 w-3"
+        className="absolute -right-1 h-3 w-3 text-violet-400"
         viewBox="0 0 12 12"
         fill="none"
-        style={{ color: 'var(--accent)' }}
       >
         <path
           d="M2 2L8 6L2 10"
@@ -130,7 +180,7 @@ function AnimatedBeam() {
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          opacity="0.5"
+          opacity="0.6"
         />
       </svg>
     </div>
@@ -149,18 +199,26 @@ export function HowItWorks() {
     <section
       ref={sectionRef}
       className="relative w-full py-24 lg:py-32"
-      style={{ background: 'var(--background)' }}
+      style={{ background: 'var(--surface-dark)' }}
     >
-      {/* Subtle top separator */}
+      {/* Subtle aurora bleed from hero */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/[0.04] rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/[0.04] rounded-full blur-[120px]" />
+      </div>
+
+      {/* Mesh grid */}
+      <div className="pointer-events-none absolute inset-0 mesh-grid" />
+
+      {/* Top separator */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-full max-w-5xl"
         style={{
-          background:
-            'linear-gradient(90deg, transparent, var(--border-strong), transparent)',
+          background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent)',
         }}
       />
 
-      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         {/* Section heading */}
         <motion.div
           className="mb-16 lg:mb-20"
@@ -173,18 +231,18 @@ export function HowItWorks() {
           }
         >
           <h2
-            className="text-2xl sm:text-3xl font-semibold text-[var(--foreground)]"
+            className="text-2xl sm:text-3xl font-semibold text-white/90"
             style={{ letterSpacing: '-0.01em', lineHeight: 1.2 }}
           >
             How it works
           </h2>
           <div
             className="mt-3 h-[2px] w-12 rounded-full"
-            style={{ backgroundColor: 'var(--accent)' }}
+            style={{ background: 'linear-gradient(90deg, #6366F1, #8B5CF6)' }}
           />
         </motion.div>
 
-        {/* Steps with beams - equal height via auto-rows-fr on wrapper */}
+        {/* Steps with beams */}
         <div className="flex flex-col md:flex-row gap-6 lg:gap-0 items-stretch">
           {STEPS.map((step, i) => (
             <div
@@ -215,9 +273,7 @@ export function HowItWorks() {
                   initial={
                     prefersReducedMotion ? undefined : { opacity: 0, scale: 0 }
                   }
-                  animate={
-                    isInView ? { opacity: 1, scale: 1 } : undefined
-                  }
+                  animate={isInView ? { opacity: 1, scale: 1 } : undefined}
                   transition={
                     prefersReducedMotion
                       ? { duration: 0 }
@@ -232,7 +288,6 @@ export function HowItWorks() {
         </div>
       </div>
 
-      {/* Beam animation keyframes */}
       <style>{`
         @keyframes beam-pulse {
           0% { transform: translateX(-100%); }
