@@ -14,10 +14,16 @@ registerSW({
       }, 60 * 1000)
     }
   },
-  // Auto-reload on update (skipWaiting + clientsClaim handle the rest)
-  onNeedRefresh() {
+})
+
+// When a new SW activates and takes control, reload to pick up new assets.
+// This fires after skipWaiting + clientsClaim on the new SW.
+let refreshing = false
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  if (!refreshing) {
+    refreshing = true
     window.location.reload()
-  },
+  }
 })
 
 createRoot(document.getElementById('root')!).render(

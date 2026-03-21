@@ -7,6 +7,7 @@ import {
   Users,
   BarChart3,
   Award,
+  Bell,
   Shield,
   RefreshCw,
   User,
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { to: '/representatives', label: 'Representatives', icon: Users, color: '#8B5CF6' },
   { to: '/pulse', label: 'Community Pulse', icon: BarChart3, color: '#10B981' },
   { to: '/engagement', label: 'Engagement', icon: Award, color: '#F59E0B' },
+  { to: '/alerts', label: 'Alerts', icon: Bell, color: '#F97316' },
   { to: '/privacy', label: 'Privacy', icon: Shield, color: '#06B6D4' },
 ]
 

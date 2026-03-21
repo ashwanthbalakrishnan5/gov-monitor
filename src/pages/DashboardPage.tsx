@@ -15,6 +15,7 @@ import { getProfile } from '@/lib/profile'
 import { preFilterChanges } from '@/lib/prefilter'
 import { analyzeChangesBatched } from '@/lib/api'
 import { legalChanges } from '@/data/legal-changes/index'
+import { recordPageVisit } from '@/lib/engagement'
 import type { PersonalizedAlert, Severity } from '@/types/alert'
 
 const DISMISSED_KEY = 'legisly-dismissed-ids'
@@ -128,6 +129,7 @@ export function DashboardPage() {
       navigate('/onboarding', { replace: true })
       return
     }
+    recordPageVisit('dashboard')
     loadAlerts()
   }, [navigate, loadAlerts])
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   motion,
   useInView,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { mockRepresentatives, type Representative, type VoteRecord } from '@/data/mock-representatives'
+import { recordPageVisit } from '@/lib/engagement'
 
 const PARTY_COLORS: Record<string, string> = {
   D: '#2563EB',
@@ -257,6 +258,8 @@ export function RepresentativesPage() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(sectionRef, { once: true, margin: '-50px' })
   const prefersReducedMotion = useReducedMotion()
+
+  useEffect(() => { recordPageVisit('representatives') }, [])
 
   const federalReps = mockRepresentatives.filter((r) => r.level === 'federal')
   const stateReps = mockRepresentatives.filter((r) => r.level === 'state')

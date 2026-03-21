@@ -30,7 +30,7 @@ interface DataItem {
 
 const DATA_INVENTORY: DataItem[] = [
   { label: 'Profile Information', stored: true, location: 'localStorage', description: 'Your visa status, employment, state, and selected interests' },
-  { label: 'Alert Preferences', stored: true, location: 'localStorage', description: 'Saved and dismissed alert IDs' },
+  { label: 'Alert Preferences', stored: true, location: 'localStorage', description: 'Notification settings, subscribed topics, saved and dismissed alert IDs' },
   { label: 'Theme Preference', stored: true, location: 'localStorage', description: 'Light or dark mode selection' },
   { label: 'Cached Alerts', stored: true, location: 'localStorage', description: 'Previously generated personalized alerts' },
   { label: 'Chat Messages', stored: false, location: 'never stored', description: 'Conversations are not saved between sessions' },

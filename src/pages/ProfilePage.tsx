@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   MapPin,
@@ -13,6 +13,10 @@ import {
   Check,
   Trash2,
   AlertTriangle,
+  Award,
+  Bell,
+  Shield,
+  ChevronRight,
 } from 'lucide-react'
 import { ProfileCompleteness } from '@/components/dashboard/ProfileCompleteness'
 import { SelectionChip } from '@/components/onboarding/SelectionChip'
@@ -559,6 +563,39 @@ export function ProfilePage() {
               prefersReducedMotion={!!prefersReducedMotion}
             />
           ))}
+        </div>
+
+        {/* Mobile-only quick links to pages not in bottom tab bar */}
+        <div className="mt-10 md:hidden">
+          <h2 className="text-sm font-mono uppercase tracking-widest text-[var(--muted-foreground)] mb-3">
+            More
+          </h2>
+          <div className="space-y-2">
+            {[
+              { to: '/engagement', label: 'Civic Engagement', icon: Award, color: '#F59E0B', desc: 'Badges, score & streaks' },
+              { to: '/alerts', label: 'Alerts & Notifications', icon: Bell, color: '#F97316', desc: 'Delivery preferences' },
+              { to: '/privacy', label: 'Privacy & Data', icon: Shield, color: '#06B6D4', desc: 'Export, transparency' },
+            ].map((item) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="flex items-center gap-3 glass-panel rounded-xl p-4 min-h-[44px] transition-all hover:bg-white/[0.06] group"
+                  style={{ boxShadow: 'var(--elevation-1)' }}
+                >
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${item.color}15` }}>
+                    <Icon className="h-4 w-4" style={{ color: item.color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-[var(--foreground)]">{item.label}</div>
+                    <div className="text-[11px] text-[var(--muted-foreground)]">{item.desc}</div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] transition-colors" />
+                </Link>
+              )
+            })}
+          </div>
         </div>
 
         {/* Delete data section */}

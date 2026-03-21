@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   motion,
   useInView,
@@ -14,6 +14,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { mockPulseData, type PulseEntry } from '@/data/mock-pulse'
+import { recordPageVisit } from '@/lib/engagement'
 
 const CATEGORY_COLORS: Record<string, string> = {
   immigration: '#7C3AED',
@@ -328,6 +329,8 @@ export function CommunityPulsePage() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(sectionRef, { once: true, margin: '-30px' })
   const prefersReducedMotion = useReducedMotion()
+
+  useEffect(() => { recordPageVisit('pulse') }, [])
 
   // Aggregate stats
   const totalResponses = mockPulseData.reduce((sum, e) => sum + e.totalResponses, 0)

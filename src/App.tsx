@@ -11,6 +11,7 @@ import { TimelinePage } from '@/pages/TimelinePage'
 import { CommunityPulsePage } from '@/pages/CommunityPulsePage'
 import { PrivacyPage } from '@/pages/PrivacyPage'
 import { EngagementPage } from '@/pages/EngagementPage'
+import { AlertsPage } from '@/pages/AlertsPage'
 import { Logo } from '@/components/Logo'
 
 function ScrollToTop() {
@@ -59,6 +60,7 @@ function App() {
             <Route path="/pulse" element={<CommunityPulsePage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/engagement" element={<EngagementPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -17,8 +17,19 @@ export default defineConfig({
         clientsClaim: true,
         // Clean old caches on activate
         cleanupOutdatedCaches: true,
-        // Cache app shell assets with short TTL
+        // Don't precache index.html — use NetworkFirst at runtime instead
+        // so users always get the latest HTML when online
+        navigateFallback: null,
         runtimeCaching: [
+          {
+            // Navigation requests: always try network first, fall back to cache offline
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages-html',
+              networkTimeoutSeconds: 3,
+            },
+          },
           {
             // Google Fonts stylesheets
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

@@ -8,56 +8,56 @@ export function OnboardingPage() {
         className="pointer-events-none absolute inset-0"
         style={{
           background: [
-            'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(26,43,74,0.05) 0%, transparent 60%)',
-            'radial-gradient(ellipse 60% 50% at 80% 30%, rgba(196,112,62,0.06) 0%, transparent 55%)',
-            'radial-gradient(ellipse 70% 50% at 50% 90%, rgba(124,58,237,0.03) 0%, transparent 50%)',
-            'radial-gradient(ellipse 50% 40% at 10% 70%, rgba(5,150,105,0.03) 0%, transparent 50%)',
+            'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(26,43,74,0.15) 0%, transparent 60%)',
+            'radial-gradient(ellipse 60% 50% at 80% 30%, rgba(196,112,62,0.12) 0%, transparent 55%)',
+            'radial-gradient(ellipse 70% 50% at 50% 90%, rgba(124,58,237,0.08) 0%, transparent 50%)',
+            'radial-gradient(ellipse 50% 40% at 10% 70%, rgba(5,150,105,0.07) 0%, transparent 50%)',
           ].join(', '),
         }}
       />
 
-      {/* Floating translucent orbs - CSS only for performance */}
+      {/* Floating translucent orbs */}
       <div
-        className="pointer-events-none absolute rounded-full"
+        className="pointer-events-none absolute rounded-full blur-3xl"
         style={{
-          width: 500,
-          height: 500,
-          top: '-10%',
-          right: '-5%',
-          background: 'radial-gradient(circle, rgba(196,112,62,0.08) 0%, transparent 70%)',
+          width: 600,
+          height: 600,
+          top: '-12%',
+          right: '-8%',
+          background: 'radial-gradient(circle, rgba(196,112,62,0.18) 0%, transparent 70%)',
           animation: 'orbFloat1 25s ease-in-out infinite',
         }}
       />
       <div
-        className="pointer-events-none absolute rounded-full"
+        className="pointer-events-none absolute rounded-full blur-3xl"
         style={{
-          width: 400,
-          height: 400,
-          bottom: '-8%',
-          left: '-5%',
-          background: 'radial-gradient(circle, rgba(26,43,74,0.07) 0%, transparent 70%)',
+          width: 500,
+          height: 500,
+          bottom: '-10%',
+          left: '-8%',
+          background: 'radial-gradient(circle, rgba(26,43,74,0.16) 0%, transparent 70%)',
           animation: 'orbFloat2 30s ease-in-out infinite',
         }}
       />
       <div
-        className="pointer-events-none absolute rounded-full"
+        className="pointer-events-none absolute rounded-full blur-3xl"
         style={{
-          width: 300,
-          height: 300,
-          top: '40%',
-          left: '50%',
-          background: 'radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%)',
+          width: 400,
+          height: 400,
+          top: '35%',
+          left: '45%',
+          background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)',
           animation: 'orbFloat3 20s ease-in-out infinite',
         }}
       />
       <div
-        className="pointer-events-none absolute rounded-full"
+        className="pointer-events-none absolute rounded-full blur-3xl"
         style={{
-          width: 350,
-          height: 350,
-          top: '20%',
-          left: '20%',
-          background: 'radial-gradient(circle, rgba(5,150,105,0.04) 0%, transparent 70%)',
+          width: 450,
+          height: 450,
+          top: '15%',
+          left: '15%',
+          background: 'radial-gradient(circle, rgba(5,150,105,0.10) 0%, transparent 70%)',
           animation: 'orbFloat4 28s ease-in-out infinite',
         }}
       />

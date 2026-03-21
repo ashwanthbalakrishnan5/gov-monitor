@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import {
   motion,
   useInView,
@@ -13,6 +13,9 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { legalChanges } from '@/data/legal-changes/index'
+import { getProfile } from '@/lib/profile'
+import { SEVERITY_MAP, getPersonalizedImpact } from '@/data/timeline-data'
+import { recordPageVisit } from '@/lib/engagement'
 
 interface TimelineEvent {
   id: string
@@ -42,29 +45,23 @@ const CATEGORY_COLORS: Record<string, string> = {
   transportation: '#EA580C',
 }
 
-// Generate timeline events from legal changes
-function generateTimelineEvents(): TimelineEvent[] {
-  const severities: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low']
-  const impacts = [
-    'This directly affects your current status and requires action within 30 days.',
-    'Monitor this change closely as it may impact your financial situation.',
-    'New requirements may apply to your situation starting on the effective date.',
-    'Changes to eligibility criteria could affect your access to benefits.',
-    'Updated regulations may change how your employer handles your documentation.',
-  ]
+function useTimelineEvents(): TimelineEvent[] {
+  const profile = getProfile()
 
-  return legalChanges
-    .filter((c) => c.dateEffective)
-    .map((change, i) => ({
-      id: change.id,
-      title: change.title,
-      category: change.category,
-      severity: severities[i % 3],
-      dateEffective: change.dateEffective!,
-      summary: change.genericSummary,
-      impact: impacts[i % impacts.length],
-    }))
-    .sort((a, b) => new Date(a.dateEffective).getTime() - new Date(b.dateEffective).getTime())
+  return useMemo(() => {
+    return legalChanges
+      .filter((c) => c.dateEffective)
+      .map((change) => ({
+        id: change.id,
+        title: change.title,
+        category: change.category,
+        severity: SEVERITY_MAP[change.id] ?? 'medium',
+        dateEffective: change.dateEffective!,
+        summary: change.genericSummary,
+        impact: getPersonalizedImpact(change.id, profile),
+      }))
+      .sort((a, b) => new Date(a.dateEffective).getTime() - new Date(b.dateEffective).getTime())
+  }, [profile])
 }
 
 function TimelineCard({ event, index }: { event: TimelineEvent; index: number }) {
@@ -227,7 +224,9 @@ export function TimelinePage() {
   const isInView = useInView(sectionRef, { once: true, margin: '-30px' })
   const prefersReducedMotion = useReducedMotion()
 
-  const events = generateTimelineEvents()
+  useEffect(() => { recordPageVisit('timeline') }, [])
+
+  const events = useTimelineEvents()
 
   return (
     <div ref={sectionRef} className="px-4 pt-6 pb-8 sm:px-8 lg:px-12 max-w-5xl">
