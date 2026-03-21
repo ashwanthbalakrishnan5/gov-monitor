@@ -231,7 +231,7 @@ export default {
       }
 
       // Parse the JSON array from Claude's response
-      // Claude may wrap the JSON in markdown code fences, so strip those
+      // Claude may wrap the JSON in markdown code fences or add text before/after
       let jsonText = textBlock.text.trim();
       if (jsonText.startsWith("```json")) {
         jsonText = jsonText.slice(7);
@@ -242,6 +242,21 @@ export default {
         jsonText = jsonText.slice(0, -3);
       }
       jsonText = jsonText.trim();
+
+      // Extract just the JSON array — Claude often appends disclaimers or extra text
+      const arrayStart = jsonText.indexOf("[");
+      const arrayEnd = jsonText.lastIndexOf("]");
+      if (arrayStart === -1 || arrayEnd === -1 || arrayEnd <= arrayStart) {
+        console.error("No JSON array found in Claude response:", jsonText.slice(0, 200));
+        return new Response(
+          JSON.stringify({ error: "AI returned an unparseable response. Please try again." }),
+          {
+            status: 502,
+            headers: { "Content-Type": "application/json", ...cors },
+          }
+        );
+      }
+      jsonText = jsonText.slice(arrayStart, arrayEnd + 1);
 
       const analysisResults = JSON.parse(jsonText) as ClaudeAlertResponse[];
 

@@ -12,6 +12,7 @@ After every prompt, update this file to reflect any changes. This is the single 
 
 - React 19 + Vite + TypeScript + Yarn + Tailwind CSS 4
 - Framer Motion for animations, shadcn/ui for base components
+- PWA via vite-plugin-pwa (auto-update, skipWaiting, 60s update polling)
 - Cloudflare Worker (API proxy) calling `claude-haiku-4-5-20251001`
 - Cloudflare Pages (frontend auto-deploy from GitHub)
 - No database, no auth. Profiles in localStorage, alert cache in sessionStorage
@@ -47,10 +48,15 @@ src/
     completeness.ts                # Profile completeness score (0-100)
     prefilter.ts                   # extractTraits + preFilterChanges before API call
     utils.ts                       # cn() classname merge
-public/favicon.svg                 # Navy square + copper L mark
+public/
+  favicon.svg                      # Navy square + copper L mark
+  pwa-192x192.png                  # PWA icon 192px
+  pwa-512x512.png                  # PWA icon 512px + maskable
+  apple-touch-icon.png             # iOS home screen icon
 worker/
   src/index.ts                     # POST /api/analyze, CORS, Claude prompt
-  wrangler.toml                    # ALLOWED_ORIGIN, worker name
+  wrangler.toml                    # ALLOWED_ORIGIN, observability config
+  .dev.vars                        # Local secrets (gitignored)
 ```
 
 ## Patterns
@@ -62,6 +68,9 @@ worker/
 - **Glass cards:** `bg-white/80 backdrop-blur-20px border-black/[0.06]` pattern used across onboarding, landing, dashboard.
 - **Grain texture:** SVG feTurbulence at ~2.5% opacity, CSS-only, zero JS cost. Used on landing page and onboarding.
 - **Mouse spotlight:** `useMouseSpotlight` hook, applied to cards via spread `{...handlers}` + radial gradient overlay.
+- **PWA updates:** skipWaiting + clientsClaim + 60s polling in main.tsx ensures new deploys are picked up fast. API calls use NetworkOnly (never cached by SW). Auto-reload on SW update.
+- **Worker JSON parsing:** Claude response may include text after JSON array; worker extracts `[...]` boundaries before parsing.
+- **Testing API locally:** Always test worker locally with `cd worker && npx wrangler dev` + curl before deploying.
 
 ## Design Rules
 
@@ -79,6 +88,7 @@ worker/
 ```bash
 yarn dev                                                  # Dev server
 yarn build                                                # Production build
+cd worker && npx wrangler dev                             # Local API server (uses .dev.vars)
 cd worker && npx wrangler deploy                          # Deploy API
 cd worker && npx wrangler secret put ANTHROPIC_API_KEY    # Set API key
 ```

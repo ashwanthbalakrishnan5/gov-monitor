@@ -10,7 +10,41 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      workbox: {
+        // Skip waiting immediately — don't leave old SW active
+        skipWaiting: true,
+        clientsClaim: true,
+        // Clean old caches on activate
+        cleanupOutdatedCaches: true,
+        // Cache app shell assets with short TTL
+        runtimeCaching: [
+          {
+            // Google Fonts stylesheets
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: { maxEntries: 4, maxAgeSeconds: 7 * 24 * 60 * 60 },
+            },
+          },
+          {
+            // Google Fonts webfont files
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // API calls — always network, never serve stale
+            urlPattern: /\/api\//,
+            handler: 'NetworkOnly',
+          },
+        ],
+      },
       manifest: {
         name: 'Legisly',
         short_name: 'Legisly',
@@ -18,7 +52,25 @@ export default defineConfig({
         theme_color: '#1A2B4A',
         background_color: '#FAFAF9',
         display: 'standalone',
+        start_url: '/',
+        scope: '/',
         icons: [
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
           {
             src: '/favicon.svg',
             sizes: 'any',
