@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  /* Fonts */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Colors - Brand */
+  --color-navy: #1A2B4A;
+  --color-navy-light: #2D4A6F;
+  --color-copper: #C4703E;
+  --color-copper-light: #D4915A;
+
+  /* Colors - Severity */
+  --color-severity-high: #DC2626;
+  --color-severity-high-bg: #FEF2F2;
+  --color-severity-medium: #D97706;
+  --color-severity-medium-bg: #FFFBEB;
+  --color-severity-low: #2563EB;
+  --color-severity-low-bg: #EFF6FF;
+
+  /* Colors - Categories */
+  --color-cat-immigration: #7C3AED;
+  --color-cat-housing: #059669;
+  --color-cat-employment: #2563EB;
+  --color-cat-tax: #D97706;
+  --color-cat-education: #DB2777;
+  --color-cat-healthcare: #DC2626;
+  --color-cat-arizona: #EA580C;
+  --color-cat-federal: #1A2B4A;
+}
+
+:root {
+  /* Core */
+  --background: #FAFAF9;
+  --foreground: #0C0C0C;
+
+  /* Surfaces */
+  --card: #FFFFFF;
+  --card-foreground: #0C0C0C;
+  --muted: #F0EDEB;
+  --muted-foreground: #6B6560;
+
+  /* Brand */
+  --primary: #1A2B4A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2D4A6F;
+  --secondary-foreground: #FFFFFF;
+  --accent: #C4703E;
+  --accent-foreground: #FFFFFF;
+
+  /* Borders */
+  --border: #E8E4E1;
+  --border-strong: #D1CBC5;
+  --ring: #1A2B4A;
+
+  /* Destructive */
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --background: #0A0A0B;
+  --foreground: #EDEDEF;
+
+  --card: #141416;
+  --card-foreground: #EDEDEF;
+  --muted: #1C1C1F;
+  --muted-foreground: #8A8F98;
+
+  --primary: #94A9C9;
+  --primary-foreground: #0A0A0B;
+  --secondary: #6B89B0;
+  --secondary-foreground: #0A0A0B;
+  --accent: #D4915A;
+  --accent-foreground: #0A0A0B;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+
+  color-scheme: dark;
+}
+
+/* Base styles */
+*,
+*::before,
+*::after {
+  border-color: var(--border);
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Editorial typography */
+.font-display {
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
