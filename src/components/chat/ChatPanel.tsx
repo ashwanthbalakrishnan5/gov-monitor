@@ -219,7 +219,7 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
             className={cn(
-              'fixed bottom-20 right-6 md:bottom-6 z-50',
+              'fixed bottom-20 right-6 md:bottom-6 z-[60]',
               'flex items-center gap-2 rounded-full px-5 py-3.5',
               'text-white text-sm font-medium',
               'shadow-lg cursor-pointer',
@@ -247,11 +247,10 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
             animate={{ y: 0, opacity: 1 }}
             exit={prefersReducedMotion ? undefined : { y: '100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[420px] sm:max-h-[600px] flex flex-col"
-            style={{ paddingTop: 'env(safe-area-inset-top)' }}
+            className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-[60] w-full sm:w-[420px] sm:max-h-[600px] flex flex-col"
           >
             <div
-              className="flex flex-col h-[100dvh] sm:h-[560px] sm:rounded-2xl overflow-hidden border border-[var(--border)]"
+              className="flex flex-col h-full sm:h-[560px] sm:rounded-2xl overflow-hidden border border-[var(--border)]"
               style={{
                 background: '#12121A',
                 boxShadow: '0 24px 80px rgba(0,0,0,0.5), 0 0 80px rgba(99,102,241,0.08)',

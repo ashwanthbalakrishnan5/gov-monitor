@@ -229,7 +229,7 @@ export function TimelinePage() {
   const events = useTimelineEvents()
 
   return (
-    <div ref={sectionRef} className="px-4 pt-6 pb-8 sm:px-8 lg:px-12 max-w-5xl">
+    <div ref={sectionRef} className="px-4 pt-6 pb-8 sm:px-8 lg:px-12 max-w-5xl overflow-x-hidden">
       {/* Page header */}
       <motion.div
         className="mb-10"
