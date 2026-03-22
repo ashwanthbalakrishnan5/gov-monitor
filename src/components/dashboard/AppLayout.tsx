@@ -109,7 +109,7 @@ export function AppLayout({ onRefresh }: AppLayoutProps) {
       <Sidebar onRefresh={onRefresh} />
 
       {/* Main content area */}
-      <main className="relative z-10 md:ml-[220px] lg:ml-[240px] pb-24 md:pb-0">
+      <main className="relative z-10 pt-12 md:pt-0 md:ml-[220px] lg:ml-[240px] pb-24 md:pb-0">
         <Outlet />
       </main>
     </div>

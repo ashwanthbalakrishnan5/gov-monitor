@@ -135,6 +135,15 @@ export function Sidebar({ onRefresh }: SidebarProps) {
         </div>
       </aside>
 
+      {/* Mobile top bar with logo */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 border-b border-white/[0.06] bg-[#0A0A0F]/80 backdrop-blur-xl" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="flex items-center h-12 px-4">
+          <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
+            <Logo size="sm" />
+          </Link>
+        </div>
+      </div>
+
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] bg-[#0A0A0F]/90 backdrop-blur-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-center justify-around h-14">

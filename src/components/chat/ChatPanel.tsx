@@ -119,6 +119,15 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const lastAutoSendTs = useRef(0)
   const prefersReducedMotion = useReducedMotion()
+  const [collapsed, setCollapsed] = useState(false)
+
+  // Auto-collapse the button text after 3 seconds
+  useEffect(() => {
+    if (isOpen) return
+    setCollapsed(false)
+    const timer = setTimeout(() => setCollapsed(true), 3000)
+    return () => clearTimeout(timer)
+  }, [isOpen])
 
   const suggestedQuestions = context?.alertTitle
     ? [
@@ -218,24 +227,38 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
             exit={prefersReducedMotion ? undefined : { scale: 0, opacity: 0 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            layout
             onClick={() => setIsOpen(true)}
             className={cn(
-              'fixed bottom-20 right-6 md:bottom-6 z-[60]',
-              'flex items-center gap-2 rounded-full px-5 py-3.5',
+              'fixed right-4 md:right-6 md:bottom-6 z-60',
+              'flex items-center justify-center rounded-full',
               'text-white text-sm font-medium',
               'shadow-lg cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2',
-              'min-h-[48px]',
+              collapsed ? 'h-12 w-12' : 'h-12 px-5',
               className
             )}
             style={{
+              bottom: 'calc(3.5rem + env(safe-area-inset-bottom, 0px) + 12px)',
               background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
               boxShadow: '0 8px 32px rgba(99,102,241,0.4), 0 0 60px rgba(139,92,246,0.15)',
             }}
           >
-            <MessageCircle className="h-5 w-5" />
-            <span>Ask Legisly AI</span>
-            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <MessageCircle className="h-5 w-5 shrink-0" />
+            <AnimatePresence mode="wait">
+              {!collapsed && (
+                <motion.span
+                  key="label"
+                  initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+                  animate={{ width: 'auto', opacity: 1, marginLeft: 8 }}
+                  exit={{ width: 0, opacity: 0, marginLeft: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Ask Legisly AI
+                </motion.span>
+              )}
+            </AnimatePresence>
           </motion.button>
         )}
       </AnimatePresence>
