@@ -219,7 +219,7 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
             className={cn(
-              'fixed bottom-6 right-6 z-50',
+              'fixed bottom-20 right-6 md:bottom-6 z-50',
               'flex items-center gap-2 rounded-full px-5 py-3.5',
               'text-white text-sm font-medium',
               'shadow-lg cursor-pointer',
@@ -248,6 +248,7 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
             exit={prefersReducedMotion ? undefined : { y: '100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[420px] sm:max-h-[600px] flex flex-col"
+            style={{ paddingTop: 'env(safe-area-inset-top)' }}
           >
             <div
               className="flex flex-col h-[100dvh] sm:h-[560px] sm:rounded-2xl overflow-hidden border border-[var(--border)]"
@@ -350,7 +351,7 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
               </div>
 
               {/* Input area */}
-              <div className="border-t border-[var(--border)] px-4 py-3">
+              <div className="border-t border-[var(--border)] px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                 <form onSubmit={handleSubmit} className="flex items-center gap-2">
                   <input
                     ref={inputRef}

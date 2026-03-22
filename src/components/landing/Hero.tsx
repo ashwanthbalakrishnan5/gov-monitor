@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   motion,
@@ -11,6 +11,7 @@ import {
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/Logo'
+import { getProfile } from '@/lib/profile'
 
 // -------------------------------------------------------------------
 // Floating geometric shape for background
@@ -239,6 +240,7 @@ const TAGLINE = 'Legisly closes it.'
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null)
   const prefersReducedMotion = useReducedMotion()
+  const ctaTarget = useMemo(() => getProfile() ? '/dashboard' : '/onboarding', [])
 
   const lineTransition = prefersReducedMotion
     ? { duration: 0 }
@@ -325,7 +327,7 @@ export function Hero() {
         <div className="flex items-center justify-between h-16">
           <Logo size="sm" inverted />
           <Link
-            to="/onboarding"
+            to={ctaTarget}
             className="text-sm font-medium text-white/50 hover:text-white transition-colors min-h-[44px] flex items-center"
           >
             Get Started
@@ -421,7 +423,7 @@ export function Hero() {
               }
             >
               <Link
-                to="/onboarding"
+                to={ctaTarget}
                 className={cn(
                   'group relative inline-flex items-center gap-2 overflow-hidden',
                   'rounded-xl px-8 py-4 text-base font-semibold text-white',

@@ -1,13 +1,15 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getProfile } from '@/lib/profile'
 
 export function FinalCTA() {
   const sectionRef = useRef<HTMLElement>(null)
   const isInView = useInView(sectionRef, { once: true, margin: '-80px' })
   const prefersReducedMotion = useReducedMotion()
+  const ctaTarget = useMemo(() => getProfile() ? '/dashboard' : '/onboarding', [])
 
   return (
     <section
@@ -80,7 +82,7 @@ export function FinalCTA() {
           }
         >
           <Link
-            to="/onboarding"
+            to={ctaTarget}
             className={cn(
               'group relative inline-flex items-center gap-2.5 overflow-hidden',
               'rounded-xl px-10 py-5 text-lg font-semibold text-white',
