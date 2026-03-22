@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   motion,
   AnimatePresence,
@@ -206,7 +207,7 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
     sendMessage(input)
   }
 
-  return (
+  return createPortal(
     <>
       {/* Floating trigger button */}
       <AnimatePresence>
@@ -383,6 +384,7 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </>,
+    document.body
   )
 }
