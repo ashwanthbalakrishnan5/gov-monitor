@@ -66,7 +66,28 @@ interface ClaudeAlertResponse {
   confidence: "high" | "medium" | "low";
 }
 
-const SYSTEM_PROMPT = `You are a legal change analyst for Legisly. Given a user's life profile and a batch of recent legal/policy changes, analyze how each change affects the user personally.
+interface ChatContext {
+  alertTitle?: string;
+  alertCategory?: string;
+  alertSeverity?: string;
+  alertSummary?: string;
+  alertPersonalImpact?: string;
+}
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface ChatRequest {
+  messages: ChatMessage[];
+  context?: ChatContext;
+  profile?: UserProfile;
+}
+
+// ── System Prompts ──────────────────────────────────────────────────
+
+const ANALYZE_SYSTEM_PROMPT = `You are a legal change analyst for Legisly. Given a user's life profile and a batch of recent legal/policy changes, analyze how each change affects the user personally.
 
 For each legal change, determine:
 1. relevance_score (0-100): how directly this affects THIS specific user
@@ -85,6 +106,72 @@ Rules:
 - Cite the source document in your summary
 
 Respond with a JSON array of analysis objects, one per legal change, in the same order as the input.`;
+
+function buildChatSystemPrompt(
+  profile?: UserProfile,
+  context?: ChatContext
+): string {
+  let prompt = `You are Legisly AI, a civic assistant that helps people understand how legal and policy changes affect them personally. You are helpful, concise, and empathetic.
+
+Rules:
+- Keep responses concise (2-4 paragraphs max unless drafting a letter or template)
+- Be specific and actionable
+- Never provide actual legal advice. Always note that your responses are informational only
+- Reference the user's specific situation when their profile is available
+- When helping draft letters or comments, use clear templates with bracketed placeholders
+- For contact information, reference Arizona state resources (azleg.gov, Cover Arizona, regulations.gov)
+- Never use emojis
+- Do not use em dashes`;
+
+  if (profile) {
+    const traits: string[] = [];
+    if (profile.residencyStatus)
+      traits.push(`Residency: ${profile.residencyStatus}`);
+    if (profile.currentSituation?.length)
+      traits.push(`Situation: ${profile.currentSituation.join(", ")}`);
+    if (profile.immigration?.visaType)
+      traits.push(`Visa: ${profile.immigration.visaType}`);
+    if (
+      profile.immigration?.optCptStatus &&
+      profile.immigration.optCptStatus !== "none"
+    )
+      traits.push(`OPT/CPT: ${profile.immigration.optCptStatus}`);
+    if (profile.employment?.industry)
+      traits.push(`Industry: ${profile.employment.industry}`);
+    if (profile.employment?.type)
+      traits.push(`Employment: ${profile.employment.type}`);
+    if (profile.housing?.situation)
+      traits.push(`Housing: ${profile.housing.situation}`);
+    if (profile.education?.degreeLevel)
+      traits.push(`Education: ${profile.education.degreeLevel}`);
+    if (profile.healthcare) traits.push(`Healthcare: ${profile.healthcare}`);
+    if (profile.location?.state)
+      traits.push(`State: ${profile.location.state}`);
+    if (profile.location?.city) traits.push(`City: ${profile.location.city}`);
+    if (profile.filingStatus)
+      traits.push(`Filing status: ${profile.filingStatus}`);
+
+    if (traits.length > 0) {
+      prompt += `\n\nUser profile:\n${traits.join("\n")}`;
+    }
+  }
+
+  if (context?.alertTitle) {
+    prompt += `\n\nThe user is currently viewing this alert:\n- Title: ${context.alertTitle}`;
+    if (context.alertCategory)
+      prompt += `\n- Category: ${context.alertCategory}`;
+    if (context.alertSeverity)
+      prompt += `\n- Severity: ${context.alertSeverity}`;
+    if (context.alertSummary) prompt += `\n- Summary: ${context.alertSummary}`;
+    if (context.alertPersonalImpact)
+      prompt += `\n- Personal impact: ${context.alertPersonalImpact}`;
+    prompt += `\n\nPrioritize answering questions about this specific alert when relevant.`;
+  }
+
+  return prompt;
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────
 
 function buildUserPrompt(profile: UserProfile, changes: LegalChange[]): string {
   const profileJson = JSON.stringify(profile, null, 2);
@@ -112,7 +199,6 @@ function getCorsOrigin(request: Request, env: Env): string | null {
   const origin = request.headers.get("Origin");
   if (!origin) return null;
   if (origin === env.ALLOWED_ORIGIN) return origin;
-  // Allow any localhost port during development
   if (origin.match(/^http:\/\/localhost:\d+$/)) return origin;
   return null;
 }
@@ -129,166 +215,32 @@ function corsHeaders(origin: string | null): Record<string, string> {
   };
 }
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const origin = getCorsOrigin(request, env);
-    const cors = corsHeaders(origin);
+// ── Route Handlers ──────────────────────────────────────────────────
 
-    // Handle CORS preflight
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: cors });
-    }
+async function handleAnalyze(
+  request: Request,
+  env: Env,
+  cors: Record<string, string>
+): Promise<Response> {
+  try {
+    const body = (await request.json()) as AnalyzeRequest;
 
-    // Only accept POST /api/analyze
-    const url = new URL(request.url);
-    if (url.pathname !== "/api/analyze" || request.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json", ...cors },
-      });
-    }
-
-    try {
-      const body = (await request.json()) as AnalyzeRequest;
-
-      if (!body.profile || !body.changes || !Array.isArray(body.changes)) {
-        return new Response(
-          JSON.stringify({
-            error: "Invalid request body. Expected { profile, changes }.",
-          }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json", ...cors },
-          }
-        );
-      }
-
-      if (body.changes.length === 0) {
-        return new Response(
-          JSON.stringify({
-            alerts: [],
-            processedAt: new Date().toISOString(),
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...cors },
-          }
-        );
-      }
-
-      const userPrompt = buildUserPrompt(body.profile, body.changes);
-
-      // Call Claude API
-      const claudeResponse = await fetch(
-        "https://api.anthropic.com/v1/messages",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": env.ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 8192,
-            system: SYSTEM_PROMPT,
-            messages: [{ role: "user", content: userPrompt }],
-          }),
-        }
-      );
-
-      if (!claudeResponse.ok) {
-        const errorText = await claudeResponse.text();
-        console.error("Claude API error:", claudeResponse.status, errorText);
-        return new Response(
-          JSON.stringify({
-            error: "AI analysis service returned an error. Please try again.",
-            details: claudeResponse.status,
-          }),
-          {
-            status: 502,
-            headers: { "Content-Type": "application/json", ...cors },
-          }
-        );
-      }
-
-      const claudeData = (await claudeResponse.json()) as {
-        content: { type: string; text: string }[];
-      };
-
-      // Extract text content from Claude response
-      const textBlock = claudeData.content.find(
-        (block) => block.type === "text"
-      );
-      if (!textBlock) {
-        return new Response(
-          JSON.stringify({ error: "No text response from AI analysis." }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...cors },
-          }
-        );
-      }
-
-      // Parse the JSON array from Claude's response
-      // Claude may wrap the JSON in markdown code fences or add text before/after
-      let jsonText = textBlock.text.trim();
-      if (jsonText.startsWith("```json")) {
-        jsonText = jsonText.slice(7);
-      } else if (jsonText.startsWith("```")) {
-        jsonText = jsonText.slice(3);
-      }
-      if (jsonText.endsWith("```")) {
-        jsonText = jsonText.slice(0, -3);
-      }
-      jsonText = jsonText.trim();
-
-      // Extract just the JSON array — Claude often appends disclaimers or extra text
-      const arrayStart = jsonText.indexOf("[");
-      const arrayEnd = jsonText.lastIndexOf("]");
-      if (arrayStart === -1 || arrayEnd === -1 || arrayEnd <= arrayStart) {
-        console.error("No JSON array found in Claude response:", jsonText.slice(0, 200));
-        return new Response(
-          JSON.stringify({ error: "AI returned an unparseable response. Please try again." }),
-          {
-            status: 502,
-            headers: { "Content-Type": "application/json", ...cors },
-          }
-        );
-      }
-      jsonText = jsonText.slice(arrayStart, arrayEnd + 1);
-
-      const analysisResults = JSON.parse(jsonText) as ClaudeAlertResponse[];
-
-      // Map Claude's response to PersonalizedAlert format, merging with original change data
-      const alerts = analysisResults.map((result, index) => {
-        const change = body.changes[index];
-        return {
-          legalChangeId: change?.id ?? `unknown-${index}`,
-          relevanceScore: result.relevance_score,
-          severity: result.severity,
-          summary: result.summary,
-          personalImpact: result.personal_impact,
-          matchedBecause: result.matched_because,
-          actionItems: result.action_items.map((item) => ({
-            action: item.action,
-            deadline: item.deadline,
-            contactInfo: item.contact_info,
-          })),
-          confidence: result.confidence,
-          title: change?.title ?? "Unknown Change",
-          category: change?.category ?? "consumer",
-          datePublished: change?.datePublished ?? "",
-          sourceUrl: change?.sourceUrl ?? "",
-          sourceDocument: change?.sourceDocument ?? "",
-          dismissed: false,
-          savedForLater: false,
-        };
-      });
-
+    if (!body.profile || !body.changes || !Array.isArray(body.changes)) {
       return new Response(
         JSON.stringify({
-          alerts,
+          error: "Invalid request body. Expected { profile, changes }.",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...cors },
+        }
+      );
+    }
+
+    if (body.changes.length === 0) {
+      return new Response(
+        JSON.stringify({
+          alerts: [],
           processedAt: new Date().toISOString(),
         }),
         {
@@ -296,20 +248,266 @@ export default {
           headers: { "Content-Type": "application/json", ...cors },
         }
       );
-    } catch (error) {
-      console.error("Worker error:", error);
-      const message =
-        error instanceof Error ? error.message : "An unexpected error occurred";
+    }
+
+    const userPrompt = buildUserPrompt(body.profile, body.changes);
+
+    const claudeResponse = await fetch(
+      "https://api.anthropic.com/v1/messages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 8192,
+          system: ANALYZE_SYSTEM_PROMPT,
+          messages: [{ role: "user", content: userPrompt }],
+        }),
+      }
+    );
+
+    if (!claudeResponse.ok) {
+      const errorText = await claudeResponse.text();
+      console.error("Claude API error:", claudeResponse.status, errorText);
       return new Response(
         JSON.stringify({
-          error: "Failed to process analysis request.",
-          details: message,
+          error: "AI analysis service returned an error. Please try again.",
+          details: claudeResponse.status,
         }),
+        {
+          status: 502,
+          headers: { "Content-Type": "application/json", ...cors },
+        }
+      );
+    }
+
+    const claudeData = (await claudeResponse.json()) as {
+      content: { type: string; text: string }[];
+    };
+
+    const textBlock = claudeData.content.find(
+      (block) => block.type === "text"
+    );
+    if (!textBlock) {
+      return new Response(
+        JSON.stringify({ error: "No text response from AI analysis." }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...cors },
         }
       );
     }
+
+    let jsonText = textBlock.text.trim();
+    if (jsonText.startsWith("```json")) {
+      jsonText = jsonText.slice(7);
+    } else if (jsonText.startsWith("```")) {
+      jsonText = jsonText.slice(3);
+    }
+    if (jsonText.endsWith("```")) {
+      jsonText = jsonText.slice(0, -3);
+    }
+    jsonText = jsonText.trim();
+
+    const arrayStart = jsonText.indexOf("[");
+    const arrayEnd = jsonText.lastIndexOf("]");
+    if (arrayStart === -1 || arrayEnd === -1 || arrayEnd <= arrayStart) {
+      console.error(
+        "No JSON array found in Claude response:",
+        jsonText.slice(0, 200)
+      );
+      return new Response(
+        JSON.stringify({
+          error: "AI returned an unparseable response. Please try again.",
+        }),
+        {
+          status: 502,
+          headers: { "Content-Type": "application/json", ...cors },
+        }
+      );
+    }
+    jsonText = jsonText.slice(arrayStart, arrayEnd + 1);
+
+    const analysisResults = JSON.parse(jsonText) as ClaudeAlertResponse[];
+
+    const alerts = analysisResults.map((result, index) => {
+      const change = body.changes[index];
+      return {
+        legalChangeId: change?.id ?? `unknown-${index}`,
+        relevanceScore: result.relevance_score,
+        severity: result.severity,
+        summary: result.summary,
+        personalImpact: result.personal_impact,
+        matchedBecause: result.matched_because,
+        actionItems: result.action_items.map((item) => ({
+          action: item.action,
+          deadline: item.deadline,
+          contactInfo: item.contact_info,
+        })),
+        confidence: result.confidence,
+        title: change?.title ?? "Unknown Change",
+        category: change?.category ?? "consumer",
+        datePublished: change?.datePublished ?? "",
+        sourceUrl: change?.sourceUrl ?? "",
+        sourceDocument: change?.sourceDocument ?? "",
+        dismissed: false,
+        savedForLater: false,
+      };
+    });
+
+    return new Response(
+      JSON.stringify({
+        alerts,
+        processedAt: new Date().toISOString(),
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...cors },
+      }
+    );
+  } catch (error) {
+    console.error("Worker error:", error);
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+    return new Response(
+      JSON.stringify({
+        error: "Failed to process analysis request.",
+        details: message,
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...cors },
+      }
+    );
+  }
+}
+
+async function handleChat(
+  request: Request,
+  env: Env,
+  cors: Record<string, string>
+): Promise<Response> {
+  try {
+    const body = (await request.json()) as ChatRequest;
+
+    if (
+      !body.messages ||
+      !Array.isArray(body.messages) ||
+      body.messages.length === 0
+    ) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Invalid request. Expected { messages: [{role, content}] }.",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...cors },
+        }
+      );
+    }
+
+    const systemPrompt = buildChatSystemPrompt(body.profile, body.context);
+
+    const claudeMessages = body.messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    const claudeResponse = await fetch(
+      "https://api.anthropic.com/v1/messages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: claudeMessages,
+        }),
+      }
+    );
+
+    if (!claudeResponse.ok) {
+      const errorText = await claudeResponse.text();
+      console.error("Claude chat API error:", claudeResponse.status, errorText);
+      return new Response(
+        JSON.stringify({ error: "AI chat service returned an error." }),
+        {
+          status: 502,
+          headers: { "Content-Type": "application/json", ...cors },
+        }
+      );
+    }
+
+    const claudeData = (await claudeResponse.json()) as {
+      content: { type: string; text: string }[];
+    };
+
+    const textBlock = claudeData.content.find((b) => b.type === "text");
+    if (!textBlock) {
+      return new Response(
+        JSON.stringify({ error: "No response from AI chat." }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...cors },
+        }
+      );
+    }
+
+    return new Response(JSON.stringify({ response: textBlock.text }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...cors },
+    });
+  } catch (error) {
+    console.error("Chat handler error:", error);
+    const message =
+      error instanceof Error ? error.message : "Unexpected error";
+    return new Response(
+      JSON.stringify({
+        error: "Failed to process chat request.",
+        details: message,
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...cors },
+      }
+    );
+  }
+}
+
+// ── Router ──────────────────────────────────────────────────────────
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const origin = getCorsOrigin(request, env);
+    const cors = corsHeaders(origin);
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: cors });
+    }
+
+    const url = new URL(request.url);
+
+    if (request.method === "POST" && url.pathname === "/api/analyze") {
+      return handleAnalyze(request, env, cors);
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/chat") {
+      return handleChat(request, env, cors);
+    }
+
+    return new Response(JSON.stringify({ error: "Not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json", ...cors },
+    });
   },
 };

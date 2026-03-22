@@ -14,6 +14,8 @@ import {
   User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { sendChatMessage, type ChatApiMessage } from '@/lib/api'
+import { getProfile } from '@/lib/profile'
 import { getMockChatResponse, type ChatContext } from './chat-mock'
 
 export interface ChatMessage {
@@ -111,6 +113,7 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [apiError, setApiError] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const lastAutoSendTs = useRef(0)
@@ -137,38 +140,6 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
     }
   }, [isOpen])
 
-  // Auto-open and send message from action center buttons
-  useEffect(() => {
-    if (autoSend && autoSend.ts !== lastAutoSendTs.current) {
-      lastAutoSendTs.current = autoSend.ts
-      setIsOpen(true)
-      // Delay to let the panel animate open before sending
-      setTimeout(() => {
-        const userMsg: ChatMessage = {
-          id: `user-${Date.now()}`,
-          role: 'user',
-          content: autoSend.message,
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, userMsg])
-        setIsTyping(true)
-
-        const delay = 800 + Math.random() * 1200
-        setTimeout(() => {
-          const response = getMockChatResponse(autoSend.message, context)
-          const assistantMsg: ChatMessage = {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: response,
-            timestamp: new Date(),
-          }
-          setMessages((prev) => [...prev, assistantMsg])
-          setIsTyping(false)
-        }, delay)
-      }, 400)
-    }
-  }, [autoSend, context])
-
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim()) return
@@ -184,22 +155,51 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
       setInput('')
       setIsTyping(true)
 
-      // Simulate AI response delay
-      const delay = 800 + Math.random() * 1200
-      setTimeout(() => {
-        const response = getMockChatResponse(text, context)
-        const assistantMsg: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: response,
-          timestamp: new Date(),
+      let responseText: string
+
+      if (apiError) {
+        // API already failed this session, use mock directly
+        await new Promise((r) => setTimeout(r, 400 + Math.random() * 600))
+        responseText = getMockChatResponse(text, context)
+      } else {
+        try {
+          // Build conversation history for API (strip id/timestamp)
+          const apiMessages: ChatApiMessage[] = [...messages, userMsg].map((m) => ({
+            role: m.role,
+            content: m.content,
+          }))
+          const profile = getProfile() ?? undefined
+          responseText = await sendChatMessage(apiMessages, context, profile)
+        } catch (err) {
+          console.warn('Chat API failed, falling back to mock:', err)
+          setApiError(true)
+          responseText = getMockChatResponse(text, context)
         }
-        setMessages((prev) => [...prev, assistantMsg])
-        setIsTyping(false)
-      }, delay)
+      }
+
+      const assistantMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: responseText,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, assistantMsg])
+      setIsTyping(false)
     },
-    [context]
+    [context, messages, apiError]
   )
+
+  // Auto-open and send message from action center buttons
+  useEffect(() => {
+    if (autoSend && autoSend.ts !== lastAutoSendTs.current) {
+      lastAutoSendTs.current = autoSend.ts
+      setIsOpen(true)
+      // Delay to let the panel animate open before sending
+      setTimeout(() => {
+        sendMessage(autoSend.message)
+      }, 400)
+    }
+  }, [autoSend, sendMessage])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -270,16 +270,16 @@ export function ChatPanel({ context, autoSend, className }: ChatPanelProps) {
                       <Bot className="h-4.5 w-4.5 text-white" />
                     </div>
                     <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-[#12121A]" />
+                      <span className={cn('animate-ping absolute inline-flex h-full w-full rounded-full opacity-75', apiError ? 'bg-amber-400' : 'bg-emerald-400')} />
+                      <span className={cn('relative inline-flex rounded-full h-3 w-3 border-2 border-[#12121A]', apiError ? 'bg-amber-400' : 'bg-emerald-400')} />
                     </span>
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-[var(--foreground)]">
                       Legisly AI
                     </h3>
-                    <p className="text-[11px] text-emerald-400 font-medium">
-                      Online
+                    <p className={cn('text-[11px] font-medium', apiError ? 'text-amber-400' : 'text-emerald-400')}>
+                      {apiError ? 'Offline mode' : 'Online'}
                     </p>
                   </div>
                 </div>

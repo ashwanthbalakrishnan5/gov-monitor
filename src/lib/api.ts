@@ -1,7 +1,15 @@
 import type { LegalChange } from '@/types/legal-change'
 import type { PersonalizedAlert } from '@/types/alert'
 import type { UserProfile } from '@/types/profile'
+import type { ChatContext } from '@/components/chat/chat-mock'
 import { generateMockAlerts } from '@/data/mock-alerts'
+
+const API_BASE = 'https://legisly-api.ashwanthbalakrishnan5.workers.dev'
+
+export interface ChatApiMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
 
 const CACHE_KEY_PREFIX = 'legisly-alerts-'
 
@@ -129,6 +137,25 @@ export async function analyzeChangesBatched(
   setCachedAlerts(profile, changeIds, accumulated)
 
   return accumulated
+}
+
+export async function sendChatMessage(
+  messages: ChatApiMessage[],
+  context?: ChatContext,
+  profile?: UserProfile,
+): Promise<string> {
+  const response = await fetch(`${API_BASE}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, context, profile }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Chat API error: ${response.status}`)
+  }
+
+  const data = (await response.json()) as { response: string }
+  return data.response
 }
 
 export function clearAlertCache(): void {
